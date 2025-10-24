@@ -12,22 +12,23 @@ from typing import Optional, Dict, Any
 
 class YOLOClassifier:
 
-    def __init__(self, model_path: str = 'yolo11m-cls.pt'):
+    def __init__(self, model_path: str = 'yolov11m-cls.pt'):
         self.model_path = model_path
         self.model = YOLO(model_path)
         self.trained = False
 
     def train(
-            self,
-            data_path: str,
-            epochs: int = 20,
-            imgsz: int = 224,
-            batch: int = 32,
-            device: str = 'cuda',
-            project: str = 'runs/classify',
-            name: str = 'yolo_office',
-            **kwargs
+        self,
+        data_path: str,
+        epochs: int = 20,
+        imgsz: int = 224,
+        batch: int = 32,
+        device: str = 'cuda',
+        project: str = 'runs/classify',
+        name: str = 'yolo_office',
+        **kwargs
     ) -> Dict[str, Any]:
+
         results = self.model.train(
             data=data_path,
             epochs=epochs,
@@ -64,5 +65,10 @@ class YOLOClassifier:
 
 
 def create_yolo_model(model_name: str = 'yolo11m-cls') -> YOLOClassifier:
-    model_file = f"{model_name}.pt"
+    model_mapping = {
+        'yolo11m-cls': 'yolov11m-cls.pt',
+        'yolo12m-cls': 'yolov12m-cls.pt'
+    }
+
+    model_file = model_mapping.get(model_name, f"{model_name}.pt")
     return YOLOClassifier(model_path=model_file)
