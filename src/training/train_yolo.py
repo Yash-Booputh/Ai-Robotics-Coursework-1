@@ -47,8 +47,11 @@ class YOLOTrainer:
 
         start_time = time.time()
 
+        # Use absolute path for data
+        data_path_abs = self.data_path.resolve()
+
         results = self.model.train(
-            data_path=str(self.data_path),
+            data_path=str(data_path_abs),
             epochs=self.epochs,
             imgsz=self.imgsz,
             batch=self.batch_size,
@@ -58,7 +61,6 @@ class YOLOTrainer:
             save=True,
             plots=True,
             cache=False,
-            pretrained=True,
             optimizer='Adam',
             lr0=self.learning_rate,
             val=True,
@@ -80,7 +82,8 @@ class YOLOTrainer:
         print("VALIDATION")
         print("=" * 70)
 
-        val_results = self.model.validate(data_path=str(self.data_path), split='val')
+        data_path_abs = self.data_path.resolve()
+        val_results = self.model.validate(data_path=str(data_path_abs), split='val')
 
         print(f"\nValidation Results:")
         print(f"  Top-1 Accuracy: {val_results.top1 * 100:.2f}%")
@@ -93,7 +96,8 @@ class YOLOTrainer:
         print("TESTING")
         print("=" * 70)
 
-        test_results = self.model.validate(data_path=str(self.data_path), split='test')
+        data_path_abs = self.data_path.resolve()
+        test_results = self.model.validate(data_path=str(data_path_abs), split='test')
 
         print(f"\nTest Results:")
         print(f"  Top-1 Accuracy: {test_results.top1 * 100:.2f}%")
