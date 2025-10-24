@@ -158,6 +158,60 @@ class ResNetTrainer:
 
         return history
 
+    def plot_training_curves(self):
+        """Plot and save training curves"""
+        import matplotlib.pyplot as plt
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+        epochs_range = range(1, len(self.train_acc_history) + 1)
+
+        # Plot Accuracy
+        ax1.plot(epochs_range, self.train_acc_history, 'o-', label='Training Accuracy',
+                 color='#2E86AB', linewidth=2.5, markersize=6)
+        ax1.plot(epochs_range, self.val_acc_history, 's-', label='Validation Accuracy',
+                 color='#A23B72', linewidth=2.5, markersize=6)
+        ax1.set_xlabel('Epoch', fontsize=13, fontweight='bold')
+        ax1.set_ylabel('Accuracy', fontsize=13, fontweight='bold')
+        ax1.set_title('Model Accuracy', fontsize=15, fontweight='bold', pad=15)
+        ax1.legend(loc='lower right', fontsize=11, framealpha=0.9)
+        ax1.grid(True, alpha=0.3, linestyle='--')
+        ax1.set_ylim([0, 1.05])
+
+        # Plot Loss
+        ax2.plot(epochs_range, self.train_loss_history, 'o-', label='Training Loss',
+                 color='#F18F01', linewidth=2.5, markersize=6)
+        ax2.plot(epochs_range, self.val_loss_history, 's-', label='Validation Loss',
+                 color='#C73E1D', linewidth=2.5, markersize=6)
+        ax2.set_xlabel('Epoch', fontsize=13, fontweight='bold')
+        ax2.set_ylabel('Loss', fontsize=13, fontweight='bold')
+        ax2.set_title('Model Loss', fontsize=15, fontweight='bold', pad=15)
+        ax2.legend(loc='upper right', fontsize=11, framealpha=0.9)
+        ax2.grid(True, alpha=0.3, linestyle='--')
+
+        plt.suptitle(f'{self.model_name.upper()} - Training History',
+                     fontsize=17, fontweight='bold', y=1.02)
+        plt.tight_layout()
+
+        save_path = self.results_path / f'training_curves_{self.model_name}.png'
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        print(f"Training curves saved: {save_path}")
+
+        # Check for overfitting
+        final_train_acc = self.train_acc_history[-1]
+        final_val_acc = self.val_acc_history[-1]
+        acc_gap = final_train_acc - final_val_acc
+
+        if acc_gap > 0.05:
+            print(f"\n⚠️  Potential overfitting detected:")
+            print(f"   Training Accuracy: {final_train_acc:.4f}")
+            print(f"   Validation Accuracy: {final_val_acc:.4f}")
+            print(f"   Gap: {acc_gap:.4f}")
+        else:
+            print(f"\n✅ Model generalizes well (Train-Val gap: {acc_gap:.4f})")
+
     def save_model(self, history: Dict):
         model_path = self.model_save_path / f'{self.model_name}_best.pth'
         torch.save(self.model.state_dict(), model_path)
@@ -176,14 +230,17 @@ class ResNetTrainer:
     def run(self):
         self.setup_data()
         self.setup_model()
-        history = self.train()
-        self.save_model(history)
+        self.train()
+        self.plot_training_curves()  # Add this line
+        test_results = self.test()
+        self.save_model(test_results)
 
         print("\n" + "=" * 70)
         print(f"{self.model_name.upper()} TRAINING COMPLETE")
         print("=" * 70)
-        print(f"\nBest val accuracy: {max(history['val_acc']) * 100:.2f}%")
-        print(f"Final train accuracy: {history['train_acc'][-1] * 100:.2f}%")
+        print(f"\nTest Accuracy: {test_results['accuracy']:.4f}")
+        print(f"Best Validation Accuracy: {self.best_acc:.4f}")
+        print(f"Training Time: {self.total_training_time // 60:.0f}m {self.total_training_time % 60:.0f}s")
 
 
 def main():
