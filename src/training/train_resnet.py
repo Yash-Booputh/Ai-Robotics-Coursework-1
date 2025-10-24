@@ -205,12 +205,12 @@ class ResNetTrainer:
         acc_gap = final_train_acc - final_val_acc
 
         if acc_gap > 0.05:
-            print(f"\n⚠️  Potential overfitting detected:")
+            print(f"\n Potential overfitting detected:")
             print(f"   Training Accuracy: {final_train_acc:.4f}")
             print(f"   Validation Accuracy: {final_val_acc:.4f}")
             print(f"   Gap: {acc_gap:.4f}")
         else:
-            print(f"\n✅ Model generalizes well (Train-Val gap: {acc_gap:.4f})")
+            print(f"\n Model generalizes well (Train-Val gap: {acc_gap:.4f})")
 
     def save_model(self, history: Dict):
         model_path = self.model_save_path / f'{self.model_name}_best.pth'
