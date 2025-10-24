@@ -43,13 +43,16 @@ class ModelEvaluator:
 
         self.model_type = model_type.lower()
         self.model_path = Path(model_path)
-        self.results_path = Path(self.config['paths']['results'])
+
+        # Create model-specific results folder
+        self.results_path = Path(self.config['paths']['results']) / self.model_type
         self.results_path.mkdir(parents=True, exist_ok=True)
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         print(f"Evaluating {model_type} model")
         print(f"Model path: {model_path}")
+        print(f"Results will be saved to: {self.results_path}")
         print(f"Device: {self.device}")
 
     def load_model(self):
@@ -191,12 +194,12 @@ class ModelEvaluator:
                 'support': int(metrics['support'][i])
             }
 
-        results_file = self.results_path / f'test_results_{self.model_type}.json'
+        results_file = self.results_path / f'test_results.json'
         with open(results_file, 'w') as f:
             json.dump(results, f, indent=2)
         print(f"\nResults saved: {results_file}")
 
-        report_file = self.results_path / f'classification_report_{self.model_type}.txt'
+        report_file = self.results_path / f'classification_report.txt'
         with open(report_file, 'w') as f:
             f.write(f"{self.model_type.upper()} - TEST SET RESULTS\n")
             f.write("=" * 70 + "\n\n")
@@ -207,38 +210,38 @@ class ModelEvaluator:
         plot_confusion_matrix(
             cm,
             self.class_names,
-            save_path=str(self.results_path / f'confusion_matrix_{self.model_type}.png'),
+            save_path=str(self.results_path / 'confusion_matrix.png'),
             title=f'Confusion Matrix - {self.model_type.upper()}',
             normalize=False
         )
-        print(f"Confusion matrix saved: confusion_matrix_{self.model_type}.png")
+        print(f"Confusion matrix saved: confusion_matrix.png")
 
         plot_confusion_matrix(
             cm,
             self.class_names,
-            save_path=str(self.results_path / f'confusion_matrix_normalized_{self.model_type}.png'),
+            save_path=str(self.results_path / 'confusion_matrix_normalized.png'),
             title=f'Confusion Matrix (Normalized) - {self.model_type.upper()}',
             normalize=True,
             cmap='RdYlGn'
         )
-        print(f"Normalized confusion matrix saved: confusion_matrix_normalized_{self.model_type}.png")
+        print(f"Normalized confusion matrix saved: confusion_matrix_normalized.png")
 
         plot_per_class_metrics(
             self.class_names,
             metrics['precision'],
             metrics['recall'],
             metrics['f1_score'],
-            save_path=str(self.results_path / f'per_class_performance_{self.model_type}.png'),
+            save_path=str(self.results_path / 'per_class_performance.png'),
             title=f'Per-Class Performance - {self.model_type.upper()}'
         )
-        print(f"Per-class metrics saved: per_class_performance_{self.model_type}.png")
+        print(f"Per-class metrics saved: per_class_performance.png")
 
         plot_class_distribution(
             self.class_names,
             metrics['support'],
-            save_path=str(self.results_path / f'class_distribution_{self.model_type}.png')
+            save_path=str(self.results_path / 'class_distribution.png')
         )
-        print(f"Class distribution saved: class_distribution_{self.model_type}.png")
+        print(f"Class distribution saved: class_distribution.png")
 
 
 def main():
