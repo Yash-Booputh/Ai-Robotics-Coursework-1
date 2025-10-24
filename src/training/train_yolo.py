@@ -116,8 +116,15 @@ class YOLOTrainer:
             shutil.copy(last_model_path, self.model_save_path / f'{model_short_name}_last.pt')
             print(f"Model saved: {self.model_save_path / f'{model_short_name}_last.pt'}")
 
-        with open(self.model_save_path / 'class_names.json', 'r') as f:
-            class_names = json.load(f)
+        # Get class names from data directory instead of JSON file
+        train_path = Path(self.config['data']['train_path'])
+        class_names = sorted([d.name for d in train_path.iterdir() if d.is_dir()])
+
+        # Save class names for future use
+        class_names_path = self.model_save_path / 'class_names.json'
+        with open(class_names_path, 'w') as f:
+            json.dump(class_names, f, indent=2)
+        print(f"Class names saved: {class_names_path}")
 
         results_dict = {
             'model': self.model_name,
