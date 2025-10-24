@@ -1,0 +1,72 @@
+# Project Configuration
+
+project:
+  name: "office-items-classifier"
+  version: "1.0.0"
+  author: "Your Name"
+
+data:
+  raw_path: "data/raw"
+  train_path: "data/train"
+  val_path: "data/val"
+  test_path: "data/test"
+  split_ratio:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  classes:
+    - "backpack"
+    - "bottle"
+    - "keyboard"
+    - "laptop"
+    - "mouse"
+    - "mug"
+    - "notebook"
+    - "pendrive"
+    - "smartphone"
+    - "stapler"
+  image_size: 224
+  seed: 42
+
+training:
+  resnet:
+    model_name: "resnet34"  # or "resnet50"
+    epochs: 20
+    batch_size: 32
+    learning_rate: 0.001
+    optimizer: "Adam"
+    scheduler:
+      step_size: 7
+      gamma: 0.1
+
+  yolo:
+    model_name: "yolo11m-cls"  # or "yolo12m-cls"
+    epochs: 20
+    batch_size: 32
+    learning_rate: 0.001
+    patience: 10
+    image_size: 224
+
+augmentation:
+  resize: 256
+  crop_size: 224
+  random_crop_scale: [0.7, 1.0]
+  horizontal_flip: 0.5
+  rotation: 25
+  color_jitter:
+    brightness: 0.3
+    contrast: 0.3
+    saturation: 0.3
+    hue: 0.1
+  random_grayscale: 0.1
+  random_perspective: 0.3
+  random_erasing: 0.2
+
+paths:
+  models: "models"
+  results: "results"
+  logs: "logs"
+
+inference:
+  confidence_threshold: 0.5
+  device: "cuda"  # or "cpu"
