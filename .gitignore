@@ -40,6 +40,16 @@ venv.bak/
 .pydevproject
 .settings/
 
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
 # Jupyter Notebooks
 .ipynb_checkpoints/
 *.ipynb
@@ -51,11 +61,6 @@ data/raw/*.zip
 *.tar.gz
 *.rar
 *.7z
-
-# Models (large files - use Git LFS if needed)
-models/*.pth
-models/*.pt
-!models/.gitkeep
 
 # Training runs (exclude large run folders)
 runs/
@@ -95,11 +100,6 @@ site/
 # Environment variables
 .env
 .env.local
-
-# YOLO downloads (pretrained weights in root)
-yolo*.pt
-!yolo11m-cls.pt
-!yolov12m-cls.pt
 
 # Backup files
 *.bak
