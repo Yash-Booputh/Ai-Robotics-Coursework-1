@@ -1,0 +1,72 @@
+================================================================================
+COMPREHENSIVE MODEL COMPARISON REPORT
+================================================================================
+
+Report Generated: 2025-10-25 17:27:47
+Number of Models: 4
+Models Compared: RESNET34, RESNET50, YOLO11M, YOLO12M
+
+================================================================================
+MODEL SPECIFICATIONS AND PERFORMANCE
+================================================================================
+
+   Model Architecture  Parameters (M)  Model Size (MB)  Accuracy (%)  Macro F1 (%)  Weighted F1 (%)  Macro Precision (%)  Macro Recall (%)
+RESNET34    ResNet-34            21.3               84     89.483627     89.300458        89.438405            89.809712         89.381794
+RESNET50    ResNet-50            23.5               98     90.491184     90.397572        90.504596            90.937000         90.420437
+ YOLO11M  YOLO11m-cls             5.2               20     95.967234     95.998660        95.964856            96.092782         95.935800
+ YOLO12M  YOLO12m-cls             5.5               22     96.093258     96.137939        96.094544            96.257283         96.065658
+
+================================================================================
+PERFORMANCE RANKINGS
+================================================================================
+
+
+Accuracy (%):
+----------------------------------------
+1. YOLO12M      96.09%
+2. YOLO11M      95.97%
+3. RESNET50     90.49%
+4. RESNET34     89.48%
+
+Macro F1 (%):
+----------------------------------------
+1. YOLO12M      96.14%
+2. YOLO11M      96.00%
+3. RESNET50     90.40%
+4. RESNET34     89.30%
+
+Weighted F1 (%):
+----------------------------------------
+1. YOLO12M      96.09%
+2. YOLO11M      95.96%
+3. RESNET50     90.50%
+4. RESNET34     89.44%
+
+================================================================================
+EFFICIENCY METRICS
+================================================================================
+
+Model Size Ranking (Smallest to Largest):
+----------------------------------------
+1. YOLO11M      20 MB, 5.2 M parameters
+2. YOLO12M      22 MB, 5.5 M parameters
+3. RESNET34     84 MB, 21.3 M parameters
+4. RESNET50     98 MB, 23.5 M parameters
+
+================================================================================
+KEY FINDINGS AND RECOMMENDATIONS
+================================================================================
+
+1. Best Overall Performance: YOLO12M
+   - Highest test accuracy and F1-score
+   - Recommended for applications prioritizing accuracy
+
+2. Most Efficient Model: YOLO11M
+   - Smallest size and parameter count
+   - Recommended for resource-constrained deployments
+
+3. Performance-Efficiency Trade-off:
+   - Best trade-off: YOLO11M
+   - Efficiency score: 4.798% per MB
+
+================================================================================

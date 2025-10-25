@@ -1,0 +1,56 @@
+{
+  "comparison_date": "2025-10-25 17:27:47",
+  "models_compared": 4,
+  "summary_statistics": {
+    "mean_accuracy": 93.0088256441268,
+    "std_accuracy": 3.5133765330409914,
+    "mean_f1": 92.95865724743545,
+    "std_f1": 3.618978981120014
+  },
+  "detailed_comparison": [
+    {
+      "Model": "RESNET34",
+      "Architecture": "ResNet-34",
+      "Parameters (M)": 21.3,
+      "Model Size (MB)": 84,
+      "Accuracy (%)": 89.48362720403023,
+      "Macro F1 (%)": 89.3004581512925,
+      "Weighted F1 (%)": 89.43840536188075,
+      "Macro Precision (%)": 89.80971161650582,
+      "Macro Recall (%)": 89.38179434884435
+    },
+    {
+      "Model": "RESNET50",
+      "Architecture": "ResNet-50",
+      "Parameters (M)": 23.5,
+      "Model Size (MB)": 98,
+      "Accuracy (%)": 90.4911838790932,
+      "Macro F1 (%)": 90.39757197923421,
+      "Weighted F1 (%)": 90.5045964435357,
+      "Macro Precision (%)": 90.93699977841368,
+      "Macro Recall (%)": 90.42043747797838
+    },
+    {
+      "Model": "YOLO11M",
+      "Architecture": "YOLO11m-cls",
+      "Parameters (M)": 5.2,
+      "Model Size (MB)": 20,
+      "Accuracy (%)": 95.96723377441714,
+      "Macro F1 (%)": 95.99866029887417,
+      "Weighted F1 (%)": 95.9648556015573,
+      "Macro Precision (%)": 96.09278248960514,
+      "Macro Recall (%)": 95.93580022810451
+    },
+    {
+      "Model": "YOLO12M",
+      "Architecture": "YOLO12m-cls",
+      "Parameters (M)": 5.5,
+      "Model Size (MB)": 22,
+      "Accuracy (%)": 96.09325771896661,
+      "Macro F1 (%)": 96.13793856034096,
+      "Weighted F1 (%)": 96.094544308092,
+      "Macro Precision (%)": 96.25728274780933,
+      "Macro Recall (%)": 96.06565793695381
+    }
+  ]
+}

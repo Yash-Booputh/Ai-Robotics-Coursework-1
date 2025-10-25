@@ -1,0 +1,170 @@
+{
+  "model_information": {
+    "model_type": "yolo12m",
+    "model_path": "models\\yolo12m_best.pt",
+    "evaluation_date": "2025-10-25 17:16:22",
+    "device": "cuda:0",
+    "num_classes": 10,
+    "class_names": [
+      "Backpack",
+      "Mug",
+      "bottle",
+      "keyboard",
+      "laptop",
+      "mouse",
+      "notebook",
+      "pendrive",
+      "smartphone",
+      "stapler"
+    ]
+  },
+  "overall_metrics": {
+    "test_accuracy": 0.9609325771896661,
+    "macro_f1": 0.9613793856034096,
+    "weighted_f1": 0.96094544308092,
+    "macro_precision": 0.9625728274780933,
+    "macro_recall": 0.9606565793695381
+  },
+  "per_class_metrics": {
+    "Backpack": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 150
+    },
+    "Mug": {
+      "accuracy": 0.9555555555555556,
+      "precision": 0.9662921348314607,
+      "recall": 0.9555555555555556,
+      "f1_score": 0.9608938547486033,
+      "support": 180
+    },
+    "bottle": {
+      "accuracy": 0.993421052631579,
+      "precision": 0.967948717948718,
+      "recall": 0.993421052631579,
+      "f1_score": 0.9805194805194806,
+      "support": 152
+    },
+    "keyboard": {
+      "accuracy": 0.9477124183006536,
+      "precision": 0.9931506849315068,
+      "recall": 0.9477124183006536,
+      "f1_score": 0.9698996655518395,
+      "support": 153
+    },
+    "laptop": {
+      "accuracy": 0.9783783783783784,
+      "precision": 0.9141414141414141,
+      "recall": 0.9783783783783784,
+      "f1_score": 0.9451697127937336,
+      "support": 185
+    },
+    "mouse": {
+      "accuracy": 0.9666666666666667,
+      "precision": 0.9602649006622517,
+      "recall": 0.9666666666666667,
+      "f1_score": 0.9634551495016611,
+      "support": 150
+    },
+    "notebook": {
+      "accuracy": 0.9523809523809523,
+      "precision": 0.9467455621301775,
+      "recall": 0.9523809523809523,
+      "f1_score": 0.9495548961424333,
+      "support": 168
+    },
+    "pendrive": {
+      "accuracy": 0.9539473684210527,
+      "precision": 0.9602649006622517,
+      "recall": 0.9539473684210527,
+      "f1_score": 0.9570957095709571,
+      "support": 152
+    },
+    "smartphone": {
+      "accuracy": 0.9333333333333333,
+      "precision": 0.9523809523809523,
+      "recall": 0.9333333333333333,
+      "f1_score": 0.9427609427609428,
+      "support": 150
+    },
+    "stapler": {
+      "accuracy": 0.9251700680272109,
+      "precision": 0.9645390070921985,
+      "recall": 0.9251700680272109,
+      "f1_score": 0.9444444444444444,
+      "support": 147
+    }
+  },
+  "confusion_matrix_stats": {
+    "total_predictions": 1587,
+    "correct_predictions": 1525,
+    "incorrect_predictions": 62,
+    "accuracy_from_cm": 0.9609325771896661
+  },
+  "error_analysis": [
+    {
+      "count": 6,
+      "true_class": "smartphone",
+      "predicted_class": "laptop"
+    },
+    {
+      "count": 6,
+      "true_class": "keyboard",
+      "predicted_class": "laptop"
+    },
+    {
+      "count": 4,
+      "true_class": "stapler",
+      "predicted_class": "smartphone"
+    },
+    {
+      "count": 4,
+      "true_class": "Mug",
+      "predicted_class": "bottle"
+    },
+    {
+      "count": 3,
+      "true_class": "notebook",
+      "predicted_class": "laptop"
+    },
+    {
+      "count": 2,
+      "true_class": "stapler",
+      "predicted_class": "pendrive"
+    },
+    {
+      "count": 2,
+      "true_class": "stapler",
+      "predicted_class": "notebook"
+    },
+    {
+      "count": 2,
+      "true_class": "stapler",
+      "predicted_class": "mouse"
+    },
+    {
+      "count": 2,
+      "true_class": "smartphone",
+      "predicted_class": "notebook"
+    },
+    {
+      "count": 2,
+      "true_class": "pendrive",
+      "predicted_class": "notebook"
+    }
+  ],
+  "performance_highlights": {
+    "best_class": {
+      "name": "Backpack",
+      "accuracy": 1.0
+    },
+    "worst_class": {
+      "name": "stapler",
+      "accuracy": 0.9251700680272109
+    },
+    "accuracy_std": 0.0229880888483817,
+    "accuracy_range": 0.07482993197278909
+  }
+}

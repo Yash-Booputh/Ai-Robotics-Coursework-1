@@ -1,0 +1,170 @@
+{
+  "model_information": {
+    "model_type": "yolo11m",
+    "model_path": "models\\yolo11m_best.pt",
+    "evaluation_date": "2025-10-25 17:15:38",
+    "device": "cuda:0",
+    "num_classes": 10,
+    "class_names": [
+      "Backpack",
+      "Mug",
+      "bottle",
+      "keyboard",
+      "laptop",
+      "mouse",
+      "notebook",
+      "pendrive",
+      "smartphone",
+      "stapler"
+    ]
+  },
+  "overall_metrics": {
+    "test_accuracy": 0.9596723377441714,
+    "macro_f1": 0.9599866029887417,
+    "weighted_f1": 0.9596485560155731,
+    "macro_precision": 0.9609278248960514,
+    "macro_recall": 0.9593580022810452
+  },
+  "per_class_metrics": {
+    "Backpack": {
+      "accuracy": 0.9933333333333333,
+      "precision": 0.9933333333333333,
+      "recall": 0.9933333333333333,
+      "f1_score": 0.9933333333333333,
+      "support": 150
+    },
+    "Mug": {
+      "accuracy": 0.9666666666666667,
+      "precision": 0.9560439560439561,
+      "recall": 0.9666666666666667,
+      "f1_score": 0.9613259668508287,
+      "support": 180
+    },
+    "bottle": {
+      "accuracy": 0.9802631578947368,
+      "precision": 0.9738562091503268,
+      "recall": 0.9802631578947368,
+      "f1_score": 0.9770491803278688,
+      "support": 152
+    },
+    "keyboard": {
+      "accuracy": 0.9673202614379085,
+      "precision": 0.9866666666666667,
+      "recall": 0.9673202614379085,
+      "f1_score": 0.976897689768977,
+      "support": 153
+    },
+    "laptop": {
+      "accuracy": 0.972972972972973,
+      "precision": 0.9230769230769231,
+      "recall": 0.972972972972973,
+      "f1_score": 0.9473684210526315,
+      "support": 185
+    },
+    "mouse": {
+      "accuracy": 0.9533333333333334,
+      "precision": 0.959731543624161,
+      "recall": 0.9533333333333334,
+      "f1_score": 0.9565217391304348,
+      "support": 150
+    },
+    "notebook": {
+      "accuracy": 0.9404761904761905,
+      "precision": 0.9518072289156626,
+      "recall": 0.9404761904761905,
+      "f1_score": 0.9461077844311377,
+      "support": 168
+    },
+    "pendrive": {
+      "accuracy": 0.9671052631578947,
+      "precision": 0.9483870967741935,
+      "recall": 0.9671052631578947,
+      "f1_score": 0.9576547231270358,
+      "support": 152
+    },
+    "smartphone": {
+      "accuracy": 0.9133333333333333,
+      "precision": 0.958041958041958,
+      "recall": 0.9133333333333333,
+      "f1_score": 0.9351535836177475,
+      "support": 150
+    },
+    "stapler": {
+      "accuracy": 0.9387755102040817,
+      "precision": 0.9583333333333334,
+      "recall": 0.9387755102040817,
+      "f1_score": 0.9484536082474226,
+      "support": 147
+    }
+  },
+  "confusion_matrix_stats": {
+    "total_predictions": 1587,
+    "correct_predictions": 1523,
+    "incorrect_predictions": 64,
+    "accuracy_from_cm": 0.9596723377441714
+  },
+  "error_analysis": [
+    {
+      "count": 6,
+      "true_class": "smartphone",
+      "predicted_class": "laptop"
+    },
+    {
+      "count": 3,
+      "true_class": "smartphone",
+      "predicted_class": "notebook"
+    },
+    {
+      "count": 3,
+      "true_class": "notebook",
+      "predicted_class": "laptop"
+    },
+    {
+      "count": 3,
+      "true_class": "keyboard",
+      "predicted_class": "laptop"
+    },
+    {
+      "count": 2,
+      "true_class": "stapler",
+      "predicted_class": "smartphone"
+    },
+    {
+      "count": 2,
+      "true_class": "stapler",
+      "predicted_class": "pendrive"
+    },
+    {
+      "count": 2,
+      "true_class": "stapler",
+      "predicted_class": "mouse"
+    },
+    {
+      "count": 2,
+      "true_class": "smartphone",
+      "predicted_class": "pendrive"
+    },
+    {
+      "count": 2,
+      "true_class": "pendrive",
+      "predicted_class": "stapler"
+    },
+    {
+      "count": 2,
+      "true_class": "notebook",
+      "predicted_class": "stapler"
+    }
+  ],
+  "performance_highlights": {
+    "best_class": {
+      "name": "Backpack",
+      "accuracy": 0.9933333333333333
+    },
+    "worst_class": {
+      "name": "smartphone",
+      "accuracy": 0.9133333333333333
+    },
+    "accuracy_std": 0.02210945241332804,
+    "accuracy_range": 0.07999999999999996
+  }
+}

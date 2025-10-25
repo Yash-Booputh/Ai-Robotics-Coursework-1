@@ -1,0 +1,170 @@
+{
+  "model_information": {
+    "model_type": "resnet50",
+    "model_path": "models\\resnet50_best.pt",
+    "evaluation_date": "2025-10-25 17:15:02",
+    "device": "cuda:0",
+    "num_classes": 10,
+    "class_names": [
+      "Backpack",
+      "Mug",
+      "bottle",
+      "keyboard",
+      "laptop",
+      "mouse",
+      "notebook",
+      "pendrive",
+      "smartphone",
+      "stapler"
+    ]
+  },
+  "overall_metrics": {
+    "test_accuracy": 0.904911838790932,
+    "macro_f1": 0.9039757197923421,
+    "weighted_f1": 0.905045964435357,
+    "macro_precision": 0.9093699977841367,
+    "macro_recall": 0.9042043747797838
+  },
+  "per_class_metrics": {
+    "Backpack": {
+      "accuracy": 0.9733333333333334,
+      "precision": 0.9668874172185431,
+      "recall": 0.9733333333333334,
+      "f1_score": 0.9700996677740864,
+      "support": 150
+    },
+    "Mug": {
+      "accuracy": 0.9222222222222223,
+      "precision": 0.8972972972972973,
+      "recall": 0.9222222222222223,
+      "f1_score": 0.9095890410958904,
+      "support": 180
+    },
+    "bottle": {
+      "accuracy": 0.9738562091503268,
+      "precision": 0.9612903225806452,
+      "recall": 0.9738562091503268,
+      "f1_score": 0.9675324675324676,
+      "support": 153
+    },
+    "keyboard": {
+      "accuracy": 0.9607843137254902,
+      "precision": 0.9607843137254902,
+      "recall": 0.9607843137254902,
+      "f1_score": 0.9607843137254902,
+      "support": 153
+    },
+    "laptop": {
+      "accuracy": 0.918918918918919,
+      "precision": 0.96045197740113,
+      "recall": 0.918918918918919,
+      "f1_score": 0.9392265193370166,
+      "support": 185
+    },
+    "mouse": {
+      "accuracy": 0.9066666666666666,
+      "precision": 0.85,
+      "recall": 0.9066666666666666,
+      "f1_score": 0.8774193548387097,
+      "support": 150
+    },
+    "notebook": {
+      "accuracy": 0.8571428571428571,
+      "precision": 0.9290322580645162,
+      "recall": 0.8571428571428571,
+      "f1_score": 0.891640866873065,
+      "support": 168
+    },
+    "pendrive": {
+      "accuracy": 0.9078947368421053,
+      "precision": 0.8466257668711656,
+      "recall": 0.9078947368421053,
+      "f1_score": 0.8761904761904762,
+      "support": 152
+    },
+    "smartphone": {
+      "accuracy": 0.8933333333333333,
+      "precision": 0.7486033519553073,
+      "recall": 0.8933333333333333,
+      "f1_score": 0.8145896656534954,
+      "support": 150
+    },
+    "stapler": {
+      "accuracy": 0.7278911564625851,
+      "precision": 0.9727272727272728,
+      "recall": 0.7278911564625851,
+      "f1_score": 0.8326848249027238,
+      "support": 147
+    }
+  },
+  "confusion_matrix_stats": {
+    "total_predictions": 1588,
+    "correct_predictions": 1437,
+    "incorrect_predictions": 151,
+    "accuracy_from_cm": 0.904911838790932
+  },
+  "error_analysis": [
+    {
+      "count": 16,
+      "true_class": "stapler",
+      "predicted_class": "pendrive"
+    },
+    {
+      "count": 10,
+      "true_class": "stapler",
+      "predicted_class": "mouse"
+    },
+    {
+      "count": 9,
+      "true_class": "pendrive",
+      "predicted_class": "smartphone"
+    },
+    {
+      "count": 9,
+      "true_class": "notebook",
+      "predicted_class": "smartphone"
+    },
+    {
+      "count": 8,
+      "true_class": "stapler",
+      "predicted_class": "smartphone"
+    },
+    {
+      "count": 6,
+      "true_class": "mouse",
+      "predicted_class": "smartphone"
+    },
+    {
+      "count": 6,
+      "true_class": "Mug",
+      "predicted_class": "smartphone"
+    },
+    {
+      "count": 5,
+      "true_class": "smartphone",
+      "predicted_class": "notebook"
+    },
+    {
+      "count": 5,
+      "true_class": "smartphone",
+      "predicted_class": "Mug"
+    },
+    {
+      "count": 5,
+      "true_class": "notebook",
+      "predicted_class": "Mug"
+    }
+  ],
+  "performance_highlights": {
+    "best_class": {
+      "name": "bottle",
+      "accuracy": 0.9738562091503268
+    },
+    "worst_class": {
+      "name": "stapler",
+      "accuracy": 0.7278911564625851
+    },
+    "accuracy_std": 0.06841903219129744,
+    "accuracy_range": 0.24596505268774171
+  }
+}

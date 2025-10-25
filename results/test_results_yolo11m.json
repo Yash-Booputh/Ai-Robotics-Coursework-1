@@ -1,0 +1,22 @@
+{
+  "model": "yolo11m-cls",
+  "test_accuracy": 0.9596977233886719,
+  "top5_accuracy": 0.997481107711792,
+  "training_time_seconds": 713.8489944934845,
+  "epochs": 20,
+  "batch_size": 32,
+  "image_size": 224,
+  "classes": [
+    "Backpack",
+    "Mug",
+    "bottle",
+    "keyboard",
+    "laptop",
+    "mouse",
+    "notebook",
+    "pendrive",
+    "smartphone",
+    "stapler"
+  ],
+  "num_classes": 10
+}
