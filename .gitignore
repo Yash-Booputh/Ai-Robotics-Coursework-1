@@ -57,7 +57,7 @@ models/*.pth
 models/*.pt
 !models/.gitkeep
 
-# Training runs
+# Training runs (exclude large run folders)
 runs/
 logs/
 *.log
@@ -98,7 +98,7 @@ site/
 
 # YOLO downloads (pretrained weights in root)
 yolo*.pt
-!yolov11m-cls.pt
+!yolo11m-cls.pt
 !yolov12m-cls.pt
 
 # Backup files
