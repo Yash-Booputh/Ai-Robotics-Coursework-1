@@ -65,10 +65,20 @@ class YOLOClassifier:
 
 
 def create_yolo_model(model_name: str = 'yolo11m-cls') -> YOLOClassifier:
+    """
+    Create YOLO classifier with correct pretrained model names
+
+    YOLO11m uses: yolo11m-cls.pt (no 'v')
+    YOLO12m uses: yolov12m-cls.pt (with 'v')
+    """
     model_mapping = {
-        'yolo11m-cls': 'yolov11m-cls.pt',
-        'yolo12m-cls': 'yolov12m-cls.pt'
+        'yolo11m-cls': 'yolo11m-cls.pt',  # No 'v' prefix
+        'yolo12m-cls': 'yolov12m-cls.pt'  # With 'v' prefix
     }
 
     model_file = model_mapping.get(model_name, f"{model_name}.pt")
+
+    print(f"Creating YOLO model: {model_name}")
+    print(f"Using pretrained weights: {model_file}")
+
     return YOLOClassifier(model_path=model_file)
