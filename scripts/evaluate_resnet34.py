@@ -16,7 +16,7 @@ from src.evaluation.evaluate import ModelEvaluator
 def main():
     evaluator = ModelEvaluator(
         model_type='resnet34',
-        model_path='models/resnet34_best.pth',
+        model_path='models/resnet34_best.pt',  # Changed from .pth to .pt
         config_path='config/config.yaml'
     )
     evaluator.evaluate()
