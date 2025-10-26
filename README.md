@@ -778,8 +778,8 @@ Four models were implemented and compared:
 |-------|------|------------|------|------------|
 | ResNet34 | CNN | 21.3M | 84 MB | ImageNet |
 | ResNet50 | CNN | 23.5M | 98 MB | ImageNet |
-| YOLO11m-cls | YOLO | 5.2M | 20 MB | ImageNet |
-| YOLO12m-cls | YOLO | 5.5M | 22 MB | ImageNet |
+| YOLO11m-cls | CNN | 5.2M | 20 MB | ImageNet |
+| YOLO12m-cls | CNN | 5.5M | 22 MB | ImageNet |
 
 ### 1. ResNet34
 
