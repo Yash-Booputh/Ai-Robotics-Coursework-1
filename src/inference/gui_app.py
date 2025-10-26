@@ -702,106 +702,205 @@ class OfficeItemsClassifierGUI:
         self.camera_info_text.insert(tk.END, camera_tips)
 
     def create_video_screen(self):
-        """Responsive video processing screen"""
-        # Use scrollable frame
+        """Redesigned video processing screen with preview capabilities - SCROLLABLE"""
+        # Use ScrollableFrame for responsive design
         scroll_frame = ScrollableFrame(self.main_container, bg='#f5f5f5')
         self.video_frame = scroll_frame
 
-        content = scroll_frame.scrollable_frame
+        # Content goes in scrollable_frame
+        content_container = scroll_frame.scrollable_frame
+
+        # Initialize video variables
+        self.input_video_path = None
+        self.output_video_path = None
+        self.input_video_cap = None
+        self.output_video_cap = None
+        self.video_playing_input = False
+        self.video_playing_output = False
+
+        # Create output directory
+        self.processed_videos_folder = Path('results') / 'processed_videos'
+        self.processed_videos_folder.mkdir(parents=True, exist_ok=True)
 
         # Header
-        header = tk.Frame(content, bg='white', relief=tk.RAISED, borderwidth=2)
-        header.pack(fill=tk.X, padx=20, pady=20)
+        header = tk.Frame(content_container, bg='white', relief=tk.RAISED, borderwidth=2)
+        header.pack(fill=tk.X, padx=20, pady=(15, 8))  # Reduced padding
 
         title = tk.Label(
             header,
-            text="Process Video File",
-            font=('Segoe UI', 18, 'bold'),
+            text="Video Processing Classification",
+            font=('Segoe UI', 16, 'bold'),  # Slightly smaller
             bg='white',
             fg='#9C27B0'
         )
-        title.pack(pady=15)
+        title.pack(pady=10)  # Reduced padding
 
-        # Content area
-        main_content = tk.Frame(content, bg='white', relief=tk.RAISED, borderwidth=2)
-        main_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
+        # Main content with split view
+        content_frame = tk.Frame(content_container, bg='#f5f5f5')
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 10))
 
-        # Instructions
-        instructions = tk.Label(
-            main_content,
-            text="Upload a video file to process with AI classification",
-            font=('Segoe UI', 12),
-            bg='white',
-            fg='#666'
+        # LEFT PANEL - Input Video
+        left_panel = tk.Frame(content_frame, bg='white', relief=tk.RAISED, borderwidth=2)
+        left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
+
+        # Left header
+        left_header = tk.Label(
+            left_panel,
+            text="INPUT VIDEO",
+            font=('Segoe UI', 14, 'bold'),
+            bg='#2196F3',
+            fg='white'
         )
-        instructions.pack(pady=25)
+        left_header.pack(fill=tk.X, pady=(0, 10))
 
-        # Process button
-        self.btn_process_video = ModernButton(
-            main_content,
-            text="SELECT & PROCESS VIDEO",
-            command=self.process_video,
-            bg='#9C27B0'
+        # Video display area (input) - wrapped in fixed frame to prevent crushing
+        input_display_frame = tk.Frame(left_panel, bg='#1a1a1a', height=300)  # Fixed pixel height
+        input_display_frame.pack(padx=10, pady=8, fill=tk.X)
+        input_display_frame.pack_propagate(False)  # Prevent frame from resizing to content
+
+        self.input_video_display = tk.Label(
+            input_display_frame,
+            text="No Video Loaded\n\nClick 'Select Video' to upload",
+            font=('Segoe UI', 11),
+            bg='#1a1a1a',
+            fg='white'
         )
-        self.btn_process_video.pack(pady=15, padx=20, ipadx=20, ipady=5)
+        self.input_video_display.pack(fill=tk.BOTH, expand=True)
 
-        # Info
-        info_text = "Supported formats: MP4, AVI, MOV, MKV\n"
-        info_text += "Processing adds predictions to each frame\n"
-        info_text += "Output saved as MP4 file"
-
-        info_label = tk.Label(
-            main_content,
-            text=info_text,
-            font=('Segoe UI', 10),
+        # Input video info
+        self.input_video_info = tk.Label(
+            left_panel,
+            text="No video selected",
+            font=('Segoe UI', 8),  # Smaller font
             bg='white',
             fg='#666',
             justify=tk.LEFT
         )
-        info_label.pack(pady=15)
+        self.input_video_info.pack(padx=10, pady=(0, 8))  # Reduced padding
 
-        # Results area
-        results_label = tk.Label(
-            main_content,
-            text="Processing Results",
+        # Input controls
+        input_controls = tk.Frame(left_panel, bg='white')
+        input_controls.pack(padx=10, pady=(0, 10), fill=tk.X)  # Reduced padding
+
+        ModernButton(
+            input_controls,
+            text="SELECT VIDEO",
+            command=self.select_input_video,
+            bg='#2196F3'
+        ).pack(side=tk.LEFT, padx=5, expand=True, fill=tk.X)
+
+        self.btn_play_input = ModernButton(
+            input_controls,
+            text="▶ PLAY",
+            command=self.toggle_input_video,
+            bg='#4CAF50'
+        )
+        self.btn_play_input.pack(side=tk.LEFT, padx=5, expand=True, fill=tk.X)
+        self.btn_play_input.config(state=tk.DISABLED)
+
+        # RIGHT PANEL - Output Video
+        right_panel = tk.Frame(content_frame, bg='white', relief=tk.RAISED, borderwidth=2)
+        right_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(5, 0))
+
+        # Right header
+        right_header = tk.Label(
+            right_panel,
+            text="OUTPUT VIDEO",
             font=('Segoe UI', 14, 'bold'),
+            bg='#4CAF50',
+            fg='white'
+        )
+        right_header.pack(fill=tk.X, pady=(0, 10))
+
+        # Video display area (output) - wrapped in fixed frame to prevent crushing
+        output_display_frame = tk.Frame(right_panel, bg='#1a1a1a', height=300)  # Fixed pixel height
+        output_display_frame.pack(padx=10, pady=8, fill=tk.X)
+        output_display_frame.pack_propagate(False)  # Prevent frame from resizing to content
+
+        self.output_video_display = tk.Label(
+            output_display_frame,
+            text="No Processed Video\n\nProcess a video to see output",
+            font=('Segoe UI', 11),
+            bg='#1a1a1a',
+            fg='white'
+        )
+        self.output_video_display.pack(fill=tk.BOTH, expand=True)
+
+        # Output video info
+        self.output_video_info = tk.Label(
+            right_panel,
+            text="No output yet",
+            font=('Segoe UI', 8),  # Smaller font
             bg='white',
-            fg='#333'
+            fg='#666',
+            justify=tk.LEFT
         )
-        results_label.pack(pady=(25, 10))
+        self.output_video_info.pack(padx=10, pady=(0, 8))  # Reduced padding
 
-        results_frame = tk.Frame(main_content, bg='white')
-        results_frame.pack(padx=30, pady=(0, 30), fill=tk.BOTH, expand=True)
+        # Output controls
+        output_controls = tk.Frame(right_panel, bg='white')
+        output_controls.pack(padx=10, pady=(0, 10), fill=tk.X)  # Reduced padding
 
-        results_scroll = tk.Scrollbar(results_frame)
-        results_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-
-        self.video_results_text = tk.Text(
-            results_frame,
-            font=('Consolas', 10),
-            wrap=tk.WORD,
-            yscrollcommand=results_scroll.set,
-            bg='#f9f9f9',
-            height=12
+        self.btn_process = ModernButton(
+            output_controls,
+            text="PROCESS VIDEO",
+            command=self.process_video,
+            bg='#9C27B0'
         )
-        self.video_results_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        results_scroll.config(command=self.video_results_text.yview)
+        self.btn_process.pack(side=tk.LEFT, padx=5, expand=True, fill=tk.X)
+        self.btn_process.config(state=tk.DISABLED)
 
-        initial_text = "Video Processing\n"
-        initial_text += "=" * 50 + "\n\n"
-        initial_text += "Waiting for video file...\n\n"
-        initial_text += "Click 'Select & Process Video' to begin."
+        self.btn_play_output = ModernButton(
+            output_controls,
+            text="▶ PLAY",
+            command=self.toggle_output_video,
+            bg='#4CAF50'
+        )
+        self.btn_play_output.pack(side=tk.LEFT, padx=5, expand=True, fill=tk.X)
+        self.btn_play_output.config(state=tk.DISABLED)
 
-        self.video_results_text.insert('1.0', initial_text)
+        # Bottom controls (in scrollable container)
+        bottom_controls = tk.Frame(content_container, bg='white', relief=tk.RAISED, borderwidth=2)
+        bottom_controls.pack(fill=tk.X, padx=20, pady=(0, 15))  # Reduced bottom padding
+
+        ModernButton(
+            bottom_controls,
+            text="OPEN OUTPUT FOLDER",
+            command=self.open_processed_videos_folder,
+            bg='#FF9800'
+        ).pack(side=tk.LEFT, padx=10, pady=10)
+
+        ModernButton(
+            bottom_controls,
+            text="CLEAR ALL",
+            command=self.clear_all_videos,
+            bg='#F44336'
+        ).pack(side=tk.LEFT, padx=10, pady=10)
+
+        # Progress info
+        self.video_progress_label = tk.Label(
+            bottom_controls,
+            text="Ready to process videos",
+            font=('Segoe UI', 10),
+            bg='white',
+            fg='#666'
+        )
+        self.video_progress_label.pack(side=tk.LEFT, padx=20, pady=10)
 
     # Navigation methods
     def show_home(self):
+        # Stop camera if it's running
+        if self.camera_active:
+            self.stop_camera()
         self.hide_all_frames()
         self.home_frame.pack(fill=tk.BOTH, expand=True)
         self.current_mode = "home"
         self.update_status("[HOME] Select a mode")
 
     def switch_to_images(self):
+        # Stop camera if it's running
+        if self.camera_active:
+            self.stop_camera()
         self.hide_all_frames()
         self.images_frame.pack(fill=tk.BOTH, expand=True)
         self.current_mode = "images"
@@ -814,6 +913,9 @@ class OfficeItemsClassifierGUI:
         self.update_status("[LIVE CAMERA] Mode active")
 
     def switch_to_video(self):
+        # Stop camera if it's running
+        if self.camera_active:
+            self.stop_camera()
         self.hide_all_frames()
         self.video_frame.pack(fill=tk.BOTH, expand=True)
         self.current_mode = "video"
@@ -1402,7 +1504,7 @@ class OfficeItemsClassifierGUI:
             else:
                 display_frame = self.last_processed_frame if self.last_processed_frame is not None else frame
 
-            # Write to video file if recording
+            # Write to video file if recording (frame is already mirrored from process_frame)
             if self.recording and self.video_writer and self.video_writer.isOpened():
                 try:
                     self.video_writer.write(display_frame)
@@ -1415,7 +1517,7 @@ class OfficeItemsClassifierGUI:
             if not self.camera_active:
                 break
 
-            # Get available display space dynamically
+            # Get available display space dynamically (frame is already mirrored)
             try:
                 label_width = self.camera_display_label.winfo_width()
                 label_height = self.camera_display_label.winfo_height()
@@ -1478,6 +1580,9 @@ class OfficeItemsClassifierGUI:
             predicted_class, confidence, probs = self.predictor.predict_image(temp_path)
             predicted_class, confidence, probs = self.smooth_prediction(predicted_class, confidence, probs)
 
+            # Mirror the frame FIRST, then draw predictions on the mirrored frame
+            frame = cv2.flip(frame, 1)
+
             height, width = frame.shape[:2]
 
             # Calculate responsive scaling factors
@@ -1486,21 +1591,22 @@ class OfficeItemsClassifierGUI:
             scale = min(scale_x, scale_y)  # Use minimum to ensure everything fits
 
             # Responsive dimensions
-            overlay_height = int(270 * scale_y)
+            overlay_height = int(205 * scale_y)
+            overlay_width = int(295 * scale_x)
             margin_x = int(20 * scale_x)
-            margin_y = int(45 * scale_y)
+            margin_y = int(35 * scale_y)
 
             # Font scales
-            title_scale = 1.2 * scale
-            text_scale = 0.6 * scale
+            title_scale = 1.0 * scale  # Slightly reduced for cleaner look
+            text_scale = 0.55 * scale
 
-            # Thickness scales
-            title_thickness = max(2, int(3 * scale))
-            text_thickness = max(1, int(2 * scale))
+            # Thickness scales - thinner for sharp, clean text
+            title_thickness = max(2, int(2 * scale))
+            text_thickness = max(1, int(1 * scale))
 
-            # Add semi-transparent overlay at top
+            # Add semi-transparent overlay at top-left (not full width)
             overlay = frame.copy()
-            cv2.rectangle(overlay, (0, 0), (width, overlay_height), (0, 0, 0), -1)
+            cv2.rectangle(overlay, (0, 0), (overlay_width, overlay_height), (0, 0, 0), -1)
             frame = cv2.addWeighted(overlay, 0.6, frame, 0.4, 0)
 
             # Color based on confidence
@@ -1517,32 +1623,32 @@ class OfficeItemsClassifierGUI:
             # Draw predictions with responsive positioning
             y_pos = margin_y
             cv2.putText(frame, predicted_class.upper(), (margin_x, y_pos),
-                       cv2.FONT_HERSHEY_SIMPLEX, title_scale, color, title_thickness)
+                       cv2.FONT_HERSHEY_TRIPLEX, title_scale, color, title_thickness, cv2.LINE_AA)
 
-            y_pos += int(35 * scale_y)
+            y_pos += int(28 * scale_y)
             conf_display = f"Confidence: {confidence:.1%} ({conf_text})"
             cv2.putText(frame, conf_display, (margin_x, y_pos),
-                       cv2.FONT_HERSHEY_SIMPLEX, text_scale, color, text_thickness)
+                       cv2.FONT_HERSHEY_TRIPLEX, text_scale, color, text_thickness, cv2.LINE_AA)
 
-            y_pos += int(30 * scale_y)
+            y_pos += int(25 * scale_y)
             model_display = f"Model: {self.model_type.get().upper()}"
             cv2.putText(frame, model_display, (margin_x, y_pos),
-                       cv2.FONT_HERSHEY_SIMPLEX, text_scale, (0, 255, 255), text_thickness)
+                       cv2.FONT_HERSHEY_TRIPLEX, text_scale, (0, 255, 255), text_thickness, cv2.LINE_AA)
 
-            y_pos += int(35 * scale_y)
+            y_pos += int(28 * scale_y)
             cv2.putText(frame, "Top 3 Predictions:", (margin_x, y_pos),
-                       cv2.FONT_HERSHEY_SIMPLEX, text_scale, (255, 255, 255), text_thickness)
+                       cv2.FONT_HERSHEY_TRIPLEX, text_scale, (255, 255, 255), text_thickness, cv2.LINE_AA)
 
             top3_idx = np.argsort(probs)[-3:][::-1]
-            y_pos += int(30 * scale_y)
+            y_pos += int(25 * scale_y)
             for i, idx in enumerate(top3_idx):
                 cls = self.predictor.class_names[idx]
                 prob = probs[idx]
                 text_color = (0, 255, 0) if i == 0 else (255, 255, 255)
                 text = f"{i+1}. {cls}: {prob:.1%}"
                 cv2.putText(frame, text, (margin_x, y_pos),
-                           cv2.FONT_HERSHEY_SIMPLEX, text_scale, text_color, text_thickness)
-                y_pos += int(30 * scale_y)
+                           cv2.FONT_HERSHEY_TRIPLEX, text_scale, text_color, text_thickness, cv2.LINE_AA)
+                y_pos += int(25 * scale_y)
 
             # Recording indicator (responsive positioning)
             if self.recording:
@@ -1551,7 +1657,7 @@ class OfficeItemsClassifierGUI:
                 rec_y = int(30 * scale_y)
                 cv2.circle(frame, (rec_x, rec_y), rec_radius, (0, 0, 255), -1)
                 cv2.putText(frame, "REC", (width - int(100 * scale_x), int(40 * scale_y)),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.7 * scale, (0, 0, 255), text_thickness)
+                           cv2.FONT_HERSHEY_TRIPLEX, 0.6 * scale, (0, 0, 255), text_thickness, cv2.LINE_AA)
 
             self.last_processed_frame = frame
 
@@ -1710,12 +1816,8 @@ class OfficeItemsClassifierGUI:
         messagebox.showinfo("Saved", f"Recording saved successfully!\nDuration: {minutes}m {seconds}s")
 
     # Video processing methods
-    def process_video(self):
-        """Process video file with classification"""
-        if not self.predictor:
-            messagebox.showwarning("Warning", "Please load a model first")
-            return
-
+    def select_input_video(self):
+        """Select input video file"""
         file_path = filedialog.askopenfilename(
             title="Select Video",
             filetypes=[("Video files", "*.mp4 *.avi *.mov *.mkv"), ("All files", "*.*")]
@@ -1724,48 +1826,568 @@ class OfficeItemsClassifierGUI:
         if not file_path:
             return
 
-        output_path = filedialog.asksaveasfilename(
-            title="Save Processed Video",
-            defaultextension=".mp4",
-            filetypes=[("MP4 files", "*.mp4")]
-        )
+        # Stop any playing video
+        self.stop_input_video()
+        self.stop_output_video()
 
-        if not output_path:
+        self.input_video_path = file_path
+
+        # Get video info
+        cap = cv2.VideoCapture(file_path)
+        if cap.isOpened():
+            fps = int(cap.get(cv2.CAP_PROP_FPS))
+            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            duration = frame_count / fps if fps > 0 else 0
+
+            # Display first frame
+            ret, frame = cap.read()
+            if ret:
+                self.display_video_frame(frame, self.input_video_display)
+
+            cap.release()
+
+            # Update info
+            info = f"File: {Path(file_path).name}\n"
+            info += f"Resolution: {width}x{height} | FPS: {fps}\n"
+            info += f"Duration: {int(duration//60)}m {int(duration%60)}s | Frames: {frame_count}"
+            self.input_video_info.config(text=info)
+
+            # Enable buttons
+            self.btn_play_input.config(state=tk.NORMAL)
+            self.btn_process.config(state=tk.NORMAL)
+            self.video_progress_label.config(text="Ready to process")
+        else:
+            messagebox.showerror("Error", "Failed to open video file")
+
+    def display_video_frame(self, frame, label_widget):
+        """Display a video frame on a label - fixed size to prevent crushing"""
+        # Fixed display height to match frame wrapper (300px with some margin)
+        display_height = 285  # Slightly less than 300px frame to account for any padding
+        h, w = frame.shape[:2]
+        aspect = w / h
+        display_width = int(display_height * aspect)
+
+        # Limit width if too wide
+        max_width = 500  # Maximum width to prevent overflow
+        if display_width > max_width:
+            display_width = max_width
+            display_height = int(max_width / aspect)
+
+        frame_resized = cv2.resize(frame, (display_width, display_height))
+        frame_rgb = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame_rgb)
+        photo = ImageTk.PhotoImage(image=img)
+
+        label_widget.config(image=photo, text="")
+        label_widget.image = photo
+
+    def toggle_input_video(self):
+        """Toggle play/pause for input video"""
+        if self.video_playing_input:
+            self.stop_input_video()
+        else:
+            self.play_input_video()
+
+    def play_input_video(self):
+        """Play input video"""
+        if not self.input_video_path:
             return
+
+        # Validate file exists
+        if not Path(self.input_video_path).exists():
+            messagebox.showerror(
+                "Video Not Found",
+                f"The video file no longer exists:\n\n{Path(self.input_video_path).name}\n\nIt may have been deleted or moved."
+            )
+            self.clear_all_videos()
+            return
+
+        self.video_playing_input = True
+        self.btn_play_input.config(text="⏸ PAUSE")
+
+        def play_loop():
+            self.input_video_cap = cv2.VideoCapture(self.input_video_path)
+
+            if not self.input_video_cap.isOpened():
+                messagebox.showerror("Error", "Failed to open video file")
+                self.stop_input_video()
+                return
+
+            while self.video_playing_input and self.input_video_cap.isOpened():
+                ret, frame = self.input_video_cap.read()
+
+                if not ret:
+                    # Loop video
+                    self.input_video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    continue
+
+                if self.video_playing_input:
+                    self.display_video_frame(frame, self.input_video_display)
+                    self.root.update_idletasks()
+
+                    # Control playback speed (30 fps)
+                    import time
+                    time.sleep(0.033)
+
+            if self.input_video_cap:
+                self.input_video_cap.release()
+
+        threading.Thread(target=play_loop, daemon=True).start()
+
+    def stop_input_video(self):
+        """Stop input video playback"""
+        self.video_playing_input = False
+        if self.input_video_cap:
+            self.input_video_cap.release()
+            self.input_video_cap = None
+        self.btn_play_input.config(text="▶ PLAY")
+
+    def toggle_output_video(self):
+        """Toggle play/pause for output video"""
+        if self.video_playing_output:
+            self.stop_output_video()
+        else:
+            self.play_output_video()
+
+    def play_output_video(self):
+        """Play output video"""
+        if not self.output_video_path:
+            return
+
+        # Validate file exists
+        if not Path(self.output_video_path).exists():
+            messagebox.showerror(
+                "Video Not Found",
+                f"The output video file no longer exists:\n\n{Path(self.output_video_path).name}\n\nIt may have been deleted or moved."
+            )
+            # Clear only output
+            self.output_video_path = None
+            self.output_video_display.config(
+                image='',
+                text="No Processed Video\n\nProcess a video to see output"
+            )
+            self.output_video_info.config(text="No output yet")
+            self.btn_play_output.config(state=tk.DISABLED)
+            return
+
+        self.video_playing_output = True
+        self.btn_play_output.config(text="⏸ PAUSE")
+
+        def play_loop():
+            self.output_video_cap = cv2.VideoCapture(self.output_video_path)
+
+            if not self.output_video_cap.isOpened():
+                messagebox.showerror("Error", "Failed to open output video file")
+                self.stop_output_video()
+                return
+
+            while self.video_playing_output and self.output_video_cap.isOpened():
+                ret, frame = self.output_video_cap.read()
+
+                if not ret:
+                    # Loop video
+                    self.output_video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    continue
+
+                if self.video_playing_output:
+                    self.display_video_frame(frame, self.output_video_display)
+                    self.root.update_idletasks()
+
+                    # Control playback speed (30 fps)
+                    import time
+                    time.sleep(0.033)
+
+            if self.output_video_cap:
+                self.output_video_cap.release()
+
+        threading.Thread(target=play_loop, daemon=True).start()
+
+    def stop_output_video(self):
+        """Stop output video playback"""
+        self.video_playing_output = False
+        if self.output_video_cap:
+            self.output_video_cap.release()
+            self.output_video_cap = None
+        self.btn_play_output.config(text="▶ PLAY")
+
+    def process_video(self):
+        """Process video file with classification"""
+        if not self.predictor:
+            messagebox.showwarning("Warning", "Please load a model first")
+            return
+
+        if not self.input_video_path:
+            messagebox.showwarning("Warning", "Please select a video first")
+            return
+
+        # Validate input file exists
+        if not Path(self.input_video_path).exists():
+            messagebox.showerror(
+                "Video Not Found",
+                f"The input video file no longer exists:\n\n{Path(self.input_video_path).name}\n\nIt may have been deleted or moved."
+            )
+            self.clear_all_videos()
+            return
+
+        # Stop any playing videos
+        self.stop_input_video()
+        self.stop_output_video()
+
+        # Generate output path
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        input_name = Path(self.input_video_path).stem
+        output_filename = f"{input_name}_processed_{timestamp}.mp4"
+        output_path = self.processed_videos_folder / output_filename
+
+        # Create loading window (matching camera style exactly)
+        loading_window = tk.Toplevel(self.root)
+        loading_window.title("Processing Video")
+        loading_window.resizable(False, False)
+        loading_window.configure(bg='white')
+
+        # Center the window on screen (same as camera)
+        window_width = 400
+        window_height = 220
+        screen_width = loading_window.winfo_screenwidth()
+        screen_height = loading_window.winfo_screenheight()
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+        loading_window.geometry(f'{window_width}x{window_height}+{x}+{y}')
+
+        # Make it modal (same as camera)
+        loading_window.transient(self.root)
+        loading_window.grab_set()
+
+        # Loading content (same structure as camera)
+        loading_frame = tk.Frame(loading_window, bg='white')
+        loading_frame.pack(expand=True, fill=tk.BOTH, padx=30, pady=30)
+
+        loading_label = tk.Label(
+            loading_frame,
+            text="Processing Video",
+            font=('Segoe UI', 16, 'bold'),
+            bg='white',
+            fg='#9C27B0'
+        )
+        loading_label.pack(pady=(0, 15))
+
+        loading_msg = tk.Label(
+            loading_frame,
+            text="Please be patient...\nThis may take several minutes",
+            font=('Segoe UI', 11),
+            bg='white',
+            fg='#666',
+            justify=tk.CENTER
+        )
+        loading_msg.pack(pady=(0, 20))
+
+        # Progress bar with custom style (same as camera)
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure("VideoProcessing.Horizontal.TProgressbar",
+                       foreground='#9C27B0',
+                       background='#9C27B0',
+                       troughcolor='#e0e0e0',
+                       bordercolor='#ccc',
+                       lightcolor='#9C27B0',
+                       darkcolor='#9C27B0')
+
+        progress_bar = ttk.Progressbar(
+            loading_frame,
+            style="VideoProcessing.Horizontal.TProgressbar",
+            mode='determinate',
+            length=320,
+            maximum=100
+        )
+        progress_bar.pack(pady=10)
+
+        # Status label (same as camera)
+        status_label = tk.Label(
+            loading_frame,
+            text="Initializing...",
+            font=('Segoe UI', 9),
+            bg='white',
+            fg='#999'
+        )
+        status_label.pack(pady=(10, 0))
+
+        # Force update to show window immediately (same as camera)
+        loading_window.update_idletasks()
+        status_label = tk.Label(
+            loading_frame,
+            text="Starting processing...",
+            font=('Segoe UI', 9),
+            bg='white',
+            fg='#999'
+        )
+        status_label.pack(pady=(10, 0))
+
+        # Force update to show window immediately
+        loading_window.update_idletasks()
 
         try:
             self.update_status("[PROCESSING] Processing video...")
-
-            result_text = "PROCESSING VIDEO...\n"
-            result_text += "=" * 60 + "\n\n"
-            result_text += f"Input: {Path(file_path).name}\n"
-            result_text += f"Output: {Path(output_path).name}\n\n"
-            result_text += "This may take several minutes...\nPlease wait."
-
-            self.video_results_text.delete('1.0', tk.END)
-            self.video_results_text.insert('1.0', result_text)
+            self.btn_process.config(state=tk.DISABLED)
 
             def process():
-                self.predictor.predict_from_video(file_path, output_path, display=False)
+                try:
+                    # Custom video processing with our overlay
+                    cap = cv2.VideoCapture(str(self.input_video_path))
 
-                result_text = "VIDEO PROCESSED\n"
-                result_text += "=" * 60 + "\n\n"
-                result_text += f"Input: {Path(file_path).name}\n"
-                result_text += f"Output: {Path(output_path).name}\n"
-                result_text += f"Model: {self.model_type.get().upper()}\n\n"
-                result_text += "Processing complete!\nVideo saved successfully."
+                    if not cap.isOpened():
+                        raise Exception("Cannot open input video")
+                        raise Exception("Cannot open input video")
 
-                self.video_results_text.delete('1.0', tk.END)
-                self.video_results_text.insert('1.0', result_text)
-                self.update_status("[COMPLETE] Video processed")
+                    # Get video properties
+                    fps = int(cap.get(cv2.CAP_PROP_FPS))
+                    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-                messagebox.showinfo("Success", f"Video saved to:\n{output_path}")
+                    # Update loading window
+                    status_label.config(text=f"Processing {total_frames} frames...")
+                    loading_window.update()
+
+                    # Create video writer
+                    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                    out = cv2.VideoWriter(str(output_path), fourcc, fps, (width, height))
+
+                    if not out.isOpened():
+                        raise Exception("Cannot create output video writer")
+
+                    frame_count = 0
+
+                    # Process every frame
+                    while True:
+                        ret, frame = cap.read()
+                        if not ret:
+                            break
+
+                        # Process every 3rd frame for performance (adjust as needed)
+                        if frame_count % 3 == 0:
+                            processed_frame = self.process_video_frame(frame)
+                        else:
+                            # Use last processed frame overlay
+                            if frame_count > 0:
+                                processed_frame = self.process_video_frame(frame)
+                            else:
+                                processed_frame = frame
+
+                        out.write(processed_frame)
+                        frame_count += 1
+
+                        # Update progress in loading window (every 30 frames)
+                        if frame_count % 30 == 0 or frame_count == total_frames:
+                            progress = (frame_count / total_frames) * 100
+                            progress_bar['value'] = progress
+                            status_label.config(text=f"{frame_count}/{total_frames} frames ({progress:.0f}%)")
+                            loading_window.update()
+
+                    cap.release()
+                    out.release()
+
+                    # Update status before closing
+                    status_label.config(text="Complete! Saving video...")
+                    loading_window.update()
+
+                    import time
+                    time.sleep(0.3)  # Brief pause to show completion
+
+                    # Close loading window
+                    if loading_window.winfo_exists():
+                        loading_window.destroy()
+
+                    # Update UI after processing
+                    self.output_video_path = str(output_path)
+
+                    # Display first frame of output
+                    cap = cv2.VideoCapture(str(output_path))
+                    if cap.isOpened():
+                        ret, frame = cap.read()
+                        if ret:
+                            self.display_video_frame(frame, self.output_video_display)
+
+                        # Get video info
+                        fps = int(cap.get(cv2.CAP_PROP_FPS))
+                        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                        duration = frame_count / fps if fps > 0 else 0
+
+                        info = f"File: {output_filename}\n"
+                        info += f"Resolution: {width}x{height} | FPS: {fps}\n"
+                        info += f"Duration: {int(duration//60)}m {int(duration%60)}s"
+                        self.output_video_info.config(text=info)
+
+                        cap.release()
+
+                    self.btn_play_output.config(state=tk.NORMAL)
+                    self.video_progress_label.config(text="✓ Processing complete!", fg='#4CAF50')
+                    self.update_status("[COMPLETE] Video processed successfully")
+                    self.btn_process.config(state=tk.NORMAL)
+
+                    messagebox.showinfo("Success", f"Video processed successfully!\n\nSaved to:\n{output_path.name}")
+
+                except Exception as e:
+                    # Close loading window on error
+                    if loading_window.winfo_exists():
+                        loading_window.destroy()
+
+                    messagebox.showerror("Error", f"Processing failed:\n{str(e)}")
+                    self.video_progress_label.config(text="✗ Processing failed", fg='#F44336')
+                    self.btn_process.config(state=tk.NORMAL)
+                    self.update_status("[ERROR] Processing failed")
 
             threading.Thread(target=process, daemon=True).start()
 
         except Exception as e:
-            messagebox.showerror("Error", f"Failed: {str(e)}")
+            # Close loading window on error
+            if loading_window.winfo_exists():
+                loading_window.destroy()
+
+            messagebox.showerror("Error", f"Failed to start processing:\n{str(e)}")
             self.update_status("[ERROR] Failed")
+            self.btn_process.config(state=tk.NORMAL)
+
+    def open_processed_videos_folder(self):
+        """Open processed videos folder"""
+        import os
+        import platform
+
+        self.processed_videos_folder.mkdir(parents=True, exist_ok=True)
+
+        if platform.system() == 'Windows':
+            os.startfile(self.processed_videos_folder)
+        elif platform.system() == 'Darwin':
+            os.system(f'open "{self.processed_videos_folder}"')
+        else:
+            os.system(f'xdg-open "{self.processed_videos_folder}"')
+
+    def clear_all_videos(self):
+        """Clear all videos from the interface"""
+        # Stop any playing videos
+        self.stop_input_video()
+        self.stop_output_video()
+
+        # Reset variables
+        self.input_video_path = None
+        self.output_video_path = None
+
+        # Reset displays
+        self.input_video_display.config(
+            image='',
+            text="No Video Loaded\n\nClick 'Select Video' to upload"
+        )
+        self.output_video_display.config(
+            image='',
+            text="No Processed Video\n\nProcess a video to see output"
+        )
+
+        # Reset info labels
+        self.input_video_info.config(text="No video selected")
+        self.output_video_info.config(text="No output yet")
+
+        # Reset buttons
+        self.btn_play_input.config(state=tk.DISABLED)
+        self.btn_play_output.config(state=tk.DISABLED)
+        self.btn_process.config(state=tk.DISABLED)
+
+        # Reset progress
+        self.video_progress_label.config(text="Ready to process videos", fg='#666')
+
+        # Clear image references
+        if hasattr(self.input_video_display, 'image'):
+            delattr(self.input_video_display, 'image')
+        if hasattr(self.output_video_display, 'image'):
+            delattr(self.output_video_display, 'image')
+
+        self.update_status("[READY] Videos cleared")
+
+    def process_video_frame(self, frame):
+        """Process a single video frame with prediction overlay (same as camera)"""
+        temp_path = Path("temp_video_frame.jpg")
+        cv2.imwrite(str(temp_path), frame)
+
+        try:
+            predicted_class, confidence, probs = self.predictor.predict_image(temp_path)
+
+            height, width = frame.shape[:2]
+
+            # Calculate responsive scaling factors
+            scale_x = width / 640.0
+            scale_y = height / 480.0
+            scale = min(scale_x, scale_y)
+
+            # Responsive dimensions
+            overlay_height = int(205 * scale_y)
+            overlay_width = int(295 * scale_x)
+            margin_x = int(20 * scale_x)
+            margin_y = int(35 * scale_y)
+
+            # Font scales
+            title_scale = 1.0 * scale
+            text_scale = 0.55 * scale
+
+            # Thickness scales
+            title_thickness = max(2, int(2 * scale))
+            text_thickness = max(1, int(1 * scale))
+
+            # Add semi-transparent overlay at top-left
+            overlay = frame.copy()
+            cv2.rectangle(overlay, (0, 0), (overlay_width, overlay_height), (0, 0, 0), -1)
+            frame = cv2.addWeighted(overlay, 0.6, frame, 0.4, 0)
+
+            # Color based on confidence
+            if confidence > 0.8:
+                color = (0, 255, 0)
+                conf_text = "HIGH"
+            elif confidence > 0.6:
+                color = (0, 200, 255)
+                conf_text = "MEDIUM"
+            else:
+                color = (0, 0, 255)
+                conf_text = "LOW"
+
+            # Draw predictions with responsive positioning
+            y_pos = margin_y
+            cv2.putText(frame, predicted_class.upper(), (margin_x, y_pos),
+                       cv2.FONT_HERSHEY_TRIPLEX, title_scale, color, title_thickness, cv2.LINE_AA)
+
+            y_pos += int(28 * scale_y)
+            conf_display = f"Confidence: {confidence:.1%} ({conf_text})"
+            cv2.putText(frame, conf_display, (margin_x, y_pos),
+                       cv2.FONT_HERSHEY_TRIPLEX, text_scale, color, text_thickness, cv2.LINE_AA)
+
+            y_pos += int(25 * scale_y)
+            model_display = f"Model: {self.model_type.get().upper()}"
+            cv2.putText(frame, model_display, (margin_x, y_pos),
+                       cv2.FONT_HERSHEY_TRIPLEX, text_scale, (0, 255, 255), text_thickness, cv2.LINE_AA)
+
+            y_pos += int(28 * scale_y)
+            cv2.putText(frame, "Top 3 Predictions:", (margin_x, y_pos),
+                       cv2.FONT_HERSHEY_TRIPLEX, text_scale, (255, 255, 255), text_thickness, cv2.LINE_AA)
+
+            top3_idx = np.argsort(probs)[-3:][::-1]
+            y_pos += int(25 * scale_y)
+            for i, idx in enumerate(top3_idx):
+                cls = self.predictor.class_names[idx]
+                prob = probs[idx]
+                text_color = (0, 255, 0) if i == 0 else (255, 255, 255)
+                text = f"{i+1}. {cls}: {prob:.1%}"
+                cv2.putText(frame, text, (margin_x, y_pos),
+                           cv2.FONT_HERSHEY_TRIPLEX, text_scale, text_color, text_thickness, cv2.LINE_AA)
+                y_pos += int(25 * scale_y)
+
+        except Exception as e:
+            print(f"Frame processing error: {e}")
+        finally:
+            if temp_path.exists():
+                temp_path.unlink()
+
+        return frame
+
 
     def open_recordings_folder(self):
         """Open recordings folder"""
