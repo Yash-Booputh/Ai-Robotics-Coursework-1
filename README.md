@@ -6,7 +6,7 @@
 **Institution:** Middlesex University Mauritius  
 **Module:** PDE3802 Artificial Intelligence (AI) in Robotics  
 **Academic Year:** 2025-26  
-**Submission Date:** 31th October 2025
+**Submission Date:** Friday 31th October 2025
 
 ---
 
@@ -1027,6 +1027,103 @@ Lower variance indicates consistent performance across all classes.
 
 ---
 
+## GUI Application
+
+### Purpose
+
+Graphical user interface for:
+- Demonstrating trained models
+- Interactive testing and evaluation
+- Real-time inference on images, camera, and video
+- Model performance comparison
+
+### Launching the GUI
+```bash
+python scripts/run_gui.py
+```
+
+**Note:** The application may take several seconds to load before the window appears. Please be patient and avoid closing the terminal during startup.
+
+
+
+### GUI Controls and Navigation
+
+**Navigation:**
+- **"Back to Home" button** available on all screens
+- **Model selection persists** across modes
+- **Easy switching** between modes
+- **Intuitive layout** with clear labels
+
+**Keyboard Shortcuts:**
+- **ESC:** Return to home screen (in any mode)
+- **Q:** Quit camera mode
+- **Space:** Pause/Resume video (video mode)
+- **Ctrl+Q:** Quit application
+
+**Error Handling:**
+- **Invalid file format:** Clear error message with supported formats
+- **Camera not found:** Helpful troubleshooting suggestions
+- **Model loading error:** Automatic retry or fallback
+- **File save error:** Alternative save location prompt
+
+---
+
+### Model Switching
+
+**Easy Model Comparison:**
+
+Users can switch between models at any time:
+1. Use dropdown menu on home screen
+2. Select different model (ResNet34/ResNet50/YOLO11m/YOLO12m)
+3. Model loads automatically (2-5 seconds)
+4. Continue with any inference mode
+5. Compare results across different models
+
+**All models are pre-loaded** for instant switching without re-initialization.
+
+**Comparison Workflow:**
+1. Test image with YOLO12m
+2. Switch to ResNet50
+3. Test same image
+4. Compare predictions and confidence scores
+5. Choose best model for your use case
+
+---
+
+### GUI Implementation Details
+
+**Technology Stack:**
+- **Framework:** Tkinter (Python standard library)
+- **Image Processing:** OpenCV (cv2)
+- **Image Display:** PIL/Pillow
+- **Threading:** Separate threads for camera/video to maintain responsiveness
+- **Design:** Modern, clean interface with intuitive controls
+
+**Performance:**
+- **Fast model loading** (~2-3 seconds)
+- **Real-time inference** (30+ FPS with GPU)
+- **Responsive UI** (no freezing during processing)
+- **Efficient memory usage** (handles large batches)
+
+**Code Location:**
+- Main GUI: `src/inference/gui_app.py`
+- Predictor: `src/inference/predict.py`
+- Entry point: `scripts/run_gui.py`
+
+---
+
+### GUI Screenshots Gallery
+
+**Home Screen:**
+![Home Screen](docs/readme-images/gui-home-screen.png)
+
+**Single Image Mode:**
+![Single Image](docs/readme-images/gui-single-image.png)
+
+**Camera Mode:**
+![Camera Mode](docs/readme-images/gui-camera-mode.png)
+
+---
 ## Code Structure
 
 ### Project Organization
@@ -1236,7 +1333,7 @@ Error: FileNotFoundError: models/yolo12m_best.pt not found
 - Try running from command line instead
 
 ---
-
+# References
 ### Framework Documentation
 
 - PyTorch Documentation: https://pytorch.org/docs/stable/index.html
