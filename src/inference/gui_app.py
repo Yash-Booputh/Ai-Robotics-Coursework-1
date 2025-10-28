@@ -116,7 +116,7 @@ class ScrollableFrame(tk.Frame):
 class OfficeItemsClassifierGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("AI Robotics - Office Items Classifier")
+        self.root.title("IRIS Item Classifier")
 
         # Set minimum window size
         self.root.minsize(1000, 700)
@@ -149,6 +149,13 @@ class OfficeItemsClassifierGUI:
         self.recordings_folder = Path('results') / 'recorded_videos'
         self.recordings_folder.mkdir(parents=True, exist_ok=True)
 
+        # Camera capture variables
+        self.capture_camera_active = False
+        self.capture_cap = None
+        self.captured_frame = None
+        self.captures_folder = Path('results') / 'captured_images'
+        self.captures_folder.mkdir(parents=True, exist_ok=True)
+
         self.setup_ui()
         self.load_model()
 
@@ -157,14 +164,27 @@ class OfficeItemsClassifierGUI:
         title_frame = tk.Frame(self.root, bg='#1976D2')
         title_frame.pack(fill=tk.X)
 
+        title_container = tk.Frame(title_frame, bg='#1976D2')
+        title_container.pack(side=tk.LEFT, padx=20, pady=15)
+
         title_label = tk.Label(
-            title_frame,
-            text="Office Items Classifier",
+            title_container,
+            text="IRIS Item Classifier",
             font=('Segoe UI', 20, 'bold'),
             bg='#1976D2',
             fg='white'
         )
-        title_label.pack(side=tk.LEFT, padx=20, pady=15)
+        title_label.pack(anchor=tk.W)
+
+        # Mode subtitle label
+        self.mode_subtitle_label = tk.Label(
+            title_container,
+            text="Home",
+            font=('Segoe UI', 10),
+            bg='#1976D2',
+            fg='#B3E5FC'
+        )
+        self.mode_subtitle_label.pack(anchor=tk.W)
 
         # Home button in title bar
         home_btn = tk.Button(
@@ -203,10 +223,12 @@ class OfficeItemsClassifierGUI:
         self.create_home_screen()
         self.create_images_screen()
         self.create_camera_screen()
+        self.create_capture_screen()  # New camera capture screen
         self.create_video_screen()
 
         # Show home by default
-        self.show_home()
+        self.mode_subtitle_label.config(text="Home")
+        self.home_frame.pack(fill=tk.BOTH, expand=True)
 
     def create_home_screen(self):
         """Home screen with scrollable content"""
@@ -301,19 +323,29 @@ class OfficeItemsClassifierGUI:
         buttons_container = tk.Frame(modes_container, bg='white')
         buttons_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
 
-        # Configure grid to be responsive
-        buttons_container.grid_columnconfigure(0, weight=1, minsize=250)
-        buttons_container.grid_columnconfigure(1, weight=1, minsize=250)
-        buttons_container.grid_columnconfigure(2, weight=1, minsize=250)
+        # Configure grid to be responsive (4 columns, 1 row)
+        buttons_container.grid_columnconfigure(0, weight=1, minsize=200)
+        buttons_container.grid_columnconfigure(1, weight=1, minsize=200)
+        buttons_container.grid_columnconfigure(2, weight=1, minsize=200)
+        buttons_container.grid_columnconfigure(3, weight=1, minsize=200)
+        buttons_container.grid_rowconfigure(0, weight=1)
 
-        # Buttons with consistent styling
+        # All buttons in one row with descriptions
         btn_images = ModernButton(
             buttons_container,
             text="CLASSIFY IMAGES\n\nUpload single or\nmultiple images",
             command=self.switch_to_images,
             bg='#4CAF50'
         )
-        btn_images.grid(row=0, column=0, padx=8, pady=8, sticky='nsew', ipady=15)
+        btn_images.grid(row=0, column=0, padx=5, pady=8, sticky='nsew', ipady=10)
+
+        btn_capture = ModernButton(
+            buttons_container,
+            text="CAMERA CAPTURE\n\nCapture & classify\nsingle images",
+            command=self.switch_to_capture,
+            bg='#00BCD4'
+        )
+        btn_capture.grid(row=0, column=1, padx=5, pady=8, sticky='nsew', ipady=10)
 
         btn_camera = ModernButton(
             buttons_container,
@@ -321,7 +353,7 @@ class OfficeItemsClassifierGUI:
             command=self.switch_to_camera,
             bg='#FF9800'
         )
-        btn_camera.grid(row=0, column=1, padx=8, pady=8, sticky='nsew', ipady=15)
+        btn_camera.grid(row=0, column=2, padx=5, pady=8, sticky='nsew', ipady=10)
 
         btn_video = ModernButton(
             buttons_container,
@@ -329,13 +361,10 @@ class OfficeItemsClassifierGUI:
             command=self.switch_to_video,
             bg='#9C27B0'
         )
-        btn_video.grid(row=0, column=2, padx=8, pady=8, sticky='nsew', ipady=15)
-
-        # Make buttons expand vertically too
-        buttons_container.grid_rowconfigure(0, weight=1)
+        btn_video.grid(row=0, column=3, padx=5, pady=8, sticky='nsew', ipady=10)
 
     def create_images_screen(self):
-        """Simple 3-column fixed layout"""
+        """2-column layout with prediction info inside image preview on the right"""
         self.images_frame = tk.Frame(self.main_container, bg='#f5f5f5')
 
         # Main container
@@ -345,7 +374,7 @@ class OfficeItemsClassifierGUI:
         # LEFT panel - Upload Controls (FIXED WIDTH - 320px)
         left_panel = tk.Frame(content, bg='white', width=320, relief=tk.RAISED, borderwidth=1)
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 5))
-        left_panel.pack_propagate(False)  # Keep fixed width
+        left_panel.pack_propagate(False)
 
         # Header
         header = tk.Label(
@@ -404,7 +433,7 @@ class OfficeItemsClassifierGUI:
             fg='#333'
         )
         list_label.pack(pady=(10, 5))
-        self.file_count_label = list_label  # Store reference to update count
+        self.file_count_label = list_label
 
         list_frame = tk.Frame(left_panel, bg='white')
         list_frame.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
@@ -423,12 +452,12 @@ class OfficeItemsClassifierGUI:
         list_scroll.config(command=self.images_listbox.yview)
         self.images_listbox.bind('<<ListboxSelect>>', self.on_image_select)
 
-        # MIDDLE panel - Image Preview (EXPANDS)
-        middle_panel = tk.Frame(content, bg='white', relief=tk.RAISED, borderwidth=1)
-        middle_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
+        # RIGHT panel - Image Preview with embedded prediction info (EXPANDS)
+        right_panel = tk.Frame(content, bg='white', relief=tk.RAISED, borderwidth=1)
+        right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(5, 0))
 
         # Image display header
-        display_header = tk.Frame(middle_panel, bg='white')
+        display_header = tk.Frame(right_panel, bg='white')
         display_header.pack(pady=10)
 
         display_label = tk.Label(
@@ -451,7 +480,7 @@ class OfficeItemsClassifierGUI:
         self.image_info_label.pack(pady=(5, 0))
 
         # Navigation buttons
-        nav_frame = tk.Frame(middle_panel, bg='white')
+        nav_frame = tk.Frame(right_panel, bg='white')
         nav_frame.pack(pady=8)
 
         self.btn_prev_image = ModernButton(
@@ -472,9 +501,13 @@ class OfficeItemsClassifierGUI:
         self.btn_next_image.pack(side=tk.LEFT, padx=5)
         self.btn_next_image.config(state=tk.DISABLED)
 
-        # Image container - FIXED BORDER ON ALL SIDES
-        img_container = tk.Frame(middle_panel, bg='#e0e0e0', relief=tk.SUNKEN, borderwidth=2)
-        img_container.pack(padx=15, pady=(8, 15), fill=tk.BOTH, expand=True)
+        # Main preview container with image on left and prediction info on right
+        preview_container = tk.Frame(right_panel, bg='#e0e0e0', relief=tk.SUNKEN, borderwidth=2)
+        preview_container.pack(padx=15, pady=(8, 15), fill=tk.BOTH, expand=True)
+
+        # LEFT side - Image display (takes 70% width)
+        img_container = tk.Frame(preview_container, bg='#f5f5f5')
+        img_container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(2, 1), pady=2)
 
         self.images_display_label = tk.Label(
             img_container,
@@ -483,68 +516,134 @@ class OfficeItemsClassifierGUI:
             bg='#f5f5f5',
             fg='#999'
         )
-        self.images_display_label.pack(padx=2, pady=2, fill=tk.BOTH, expand=True)
+        self.images_display_label.pack(fill=tk.BOTH, expand=True)
 
-        # RIGHT panel - Classification Results (FIXED WIDTH - 320px)
-        right_panel = tk.Frame(content, bg='white', width=320, relief=tk.RAISED, borderwidth=1)
-        right_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(5, 0))
-        right_panel.pack_propagate(False)  # Keep fixed width
+        # RIGHT side - Prediction info panel (FIXED WIDTH - 280px)
+        prediction_panel = tk.Frame(preview_container, bg='#f5f5f5', width=280)
+        prediction_panel.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(1, 2), pady=2)
+        prediction_panel.pack_propagate(False)
 
-        results_label = tk.Label(
-            right_panel,
-            text="Classification Results",
-            font=('Segoe UI', 11, 'bold'),
-            bg='white',
-            fg='#333'
+        # Prediction header
+        pred_header = tk.Label(
+            prediction_panel,
+            text="PREDICTION INFO",
+            font=('Segoe UI', 10, 'bold'),
+            bg='#4CAF50',  # ← Green to match classify button
+            fg='white',
+            pady=8
         )
-        results_label.pack(pady=10)
+        pred_header.pack(fill=tk.X)
 
-        results_info = tk.Label(
-            right_panel,
-            text="Results will appear here after classification",
-            font=('Segoe UI', 8),
-            bg='white',
-            fg='#999',
-            wraplength=280
-        )
-        results_info.pack(pady=(0, 5))
+        # Prediction content
+        pred_content = tk.Frame(prediction_panel, bg='#f5f5f5')
+        pred_content.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        results_frame = tk.Frame(right_panel, bg='white')
-        results_frame.pack(padx=10, pady=(0, 10), fill=tk.BOTH, expand=True)
-
-        results_scroll = tk.Scrollbar(results_frame)
-        results_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-
-        self.images_results_text = tk.Text(
-            results_frame,
-            font=('Consolas', 8),
+        self.prediction_info_text = tk.Text(
+            pred_content,
+            font=('Segoe UI', 9),
+            bg='#f5f5f5',
+            fg='#333',
             wrap=tk.WORD,
-            yscrollcommand=results_scroll.set,
-            bg='#fafafa',
-            fg='#000000'  # Set default text color
+            relief=tk.FLAT,
+            state=tk.DISABLED,
+            borderwidth=0,
+            highlightthickness=0
         )
-        self.images_results_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        results_scroll.config(command=self.images_results_text.yview)
+        self.prediction_info_text.pack(fill=tk.BOTH, expand=True)
 
-        # Configure tags for bold text with colors
-        self.images_results_text.tag_configure("bold", font=('Consolas', 8, 'bold'), foreground='#000000')
-        self.images_results_text.tag_configure("class_name", font=('Consolas', 9, 'bold'), foreground='#1976D2')
-        self.images_results_text.tag_configure("confidence", font=('Consolas', 9, 'bold'), foreground='#2E7D32')
-        self.images_results_text.tag_configure("header", font=('Consolas', 9, 'bold'), foreground='#5E35B1')
+        # Configure text tags for colored text
+        self.prediction_info_text.tag_configure("label", foreground='#666', font=('Segoe UI', 9, 'bold'))
+        self.prediction_info_text.tag_configure("class", foreground='#4CAF50', font=('Segoe UI', 11, 'bold'))
+        self.prediction_info_text.tag_configure("conf_high", foreground='#4CAF50', font=('Segoe UI', 9, 'bold'))
+        self.prediction_info_text.tag_configure("conf_medium", foreground='#FF9800', font=('Segoe UI', 9, 'bold'))
+        self.prediction_info_text.tag_configure("conf_low", foreground='#F44336', font=('Segoe UI', 9, 'bold'))
+        self.prediction_info_text.tag_configure("top3", foreground='#666', font=('Segoe UI', 9))
+        self.prediction_info_text.tag_configure("top1", foreground='#4CAF50', font=('Segoe UI', 9, 'bold'))
 
-        # Initial help text
-        initial_text = "How to use:\n\n"
-        initial_text += "1. Select up to 10 images\n"
-        initial_text += "2. Preview them here\n"
-        initial_text += "3. Click 'Classify Images'\n"
-        initial_text += "4. View results here\n\n"
-        initial_text += "Waiting for images..."
-        self.images_results_text.insert('1.0', initial_text)
+        # Set initial text
+        self.update_prediction_info_box(None)
 
         # Storage
         self.selected_image_paths = []
         self.image_predictions = {}
         self.current_image_index = 0
+
+    def update_prediction_info_box(self, image_path):
+        """Update the prediction info box with current image's prediction"""
+        self.prediction_info_text.config(state=tk.NORMAL)
+        self.prediction_info_text.delete('1.0', tk.END)
+
+        if image_path is None:
+            # No image selected
+            self.prediction_info_text.insert('1.0', "Upload image(s) to see results\n\n", "label")
+            self.prediction_info_text.insert(tk.END, "Select images and click 'Classify Images' to begin")
+        elif image_path not in self.image_predictions:
+            # Image selected but not classified yet
+            filename = Path(image_path).name
+            # Truncate filename if too long
+            if len(filename) > 35:
+                display_name = filename[:32] + "..."
+            else:
+                display_name = filename
+
+            self.prediction_info_text.insert('1.0', "Image:\n", "label")
+            self.prediction_info_text.insert(tk.END, f"{display_name}\n\n")
+            self.prediction_info_text.insert(tk.END, "Status: ", "label")
+            self.prediction_info_text.insert(tk.END, "Not classified yet\n\n")
+            self.prediction_info_text.insert(tk.END, "Click 'Classify Images' to get prediction")
+        else:
+            # Image has been classified - show prediction
+            filename = Path(image_path).name
+            # Truncate filename if too long
+            if len(filename) > 35:
+                display_name = filename[:32] + "..."
+            else:
+                display_name = filename
+
+            prediction = self.image_predictions[image_path]
+            predicted_class = prediction['class']
+            confidence = prediction['confidence']
+            probs = prediction['probs']
+
+            # Determine confidence level
+            if confidence > 0.8:
+                conf_level = "HIGH"
+                conf_tag = "conf_high"
+            elif confidence > 0.6:
+                conf_level = "MEDIUM"
+                conf_tag = "conf_medium"
+            else:
+                conf_level = "LOW"
+                conf_tag = "conf_low"
+
+            # Display information
+            self.prediction_info_text.insert('1.0', "Image:\n", "label")
+            self.prediction_info_text.insert(tk.END, f"{display_name}\n\n")
+
+            self.prediction_info_text.insert(tk.END, "Class:\n", "label")
+            self.prediction_info_text.insert(tk.END, f"{predicted_class.upper()}\n\n", "class")
+
+            self.prediction_info_text.insert(tk.END, "Confidence: ", "label")
+            self.prediction_info_text.insert(tk.END, f"{confidence * 100:.1f}%", conf_tag)
+            self.prediction_info_text.insert(tk.END, " | ", "label")
+            self.prediction_info_text.insert(tk.END, "Level: ", "label")
+            self.prediction_info_text.insert(tk.END, f"{conf_level}\n\n", conf_tag)
+
+            self.prediction_info_text.insert(tk.END, "Top 3 Predictions:\n", "label")
+
+            # Get top 3 predictions
+            top3_idx = np.argsort(probs)[-3:][::-1]
+            for i, idx in enumerate(top3_idx, 1):
+                cls = self.predictor.class_names[idx]
+                prob = probs[idx]
+                if i == 1:
+                    # Highlight the top prediction with green
+                    self.prediction_info_text.insert(tk.END, f"  {i}. {cls} - {prob * 100:.1f}%\n", "top1")
+                else:
+                    # Other predictions in yellow
+                    self.prediction_info_text.insert(tk.END, f"  {i}. {cls} - {prob * 100:.1f}%\n", "top3")
+
+        self.prediction_info_text.config(state=tk.DISABLED)
 
     def create_camera_screen(self):
         """Responsive camera feed screen with LARGE feed display"""
@@ -700,6 +799,221 @@ class OfficeItemsClassifierGUI:
         camera_tips += "- Stop when done"
 
         self.camera_info_text.insert(tk.END, camera_tips)
+
+    def create_capture_screen(self):
+        """Camera Capture screen - 3 column layout similar to images screen"""
+        self.capture_frame = tk.Frame(self.main_container, bg='#f5f5f5')
+
+        # Main container
+        content = tk.Frame(self.capture_frame, bg='#f5f5f5')
+        content.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # LEFT PANEL - Controls (FIXED WIDTH - 320px)
+        left_panel = tk.Frame(content, bg='white', width=320, relief=tk.RAISED, borderwidth=1)
+        left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 5))
+        left_panel.pack_propagate(False)
+
+        # Header
+        header = tk.Label(
+            left_panel,
+            text="Camera Controls",
+            font=('Segoe UI', 14, 'bold'),
+            bg='white',
+            fg='#00BCD4'
+        )
+        header.pack(pady=10)
+
+        # Status label
+        self.capture_status_label = tk.Label(
+            left_panel,
+            text="Camera Ready",
+            font=('Segoe UI', 10, 'bold'),
+            bg='white',
+            fg='#666'
+        )
+        self.capture_status_label.pack(pady=5)
+
+        # Control buttons frame
+        controls_frame = tk.Frame(left_panel, bg='white')
+        controls_frame.pack(pady=6, padx=10, fill=tk.X)
+
+        # Start/Stop Camera Button
+        self.btn_start_capture_camera = ModernButton(
+            controls_frame,
+            text="START CAMERA",
+            command=self.toggle_capture_camera,
+            bg='#4CAF50'
+        )
+        self.btn_start_capture_camera.pack(pady=3, fill=tk.X)
+
+        # Capture Button
+        self.btn_capture = ModernButton(
+            controls_frame,
+            text="CAPTURE",
+            command=self.capture_image,
+            bg='#00BCD4'
+        )
+        self.btn_capture.pack(pady=3, fill=tk.X)
+        self.btn_capture.config(state=tk.DISABLED)
+
+        # Open folder button
+        btn_open_folder = ModernButton(
+            controls_frame,
+            text="OPEN FOLDER",
+            command=self.open_captures_folder,
+            bg='#9E9E9E'
+        )
+        btn_open_folder.pack(pady=3, fill=tk.X)
+
+        # Separator
+        separator = tk.Frame(left_panel, bg='#ddd', height=1)
+        separator.pack(fill=tk.X, padx=15, pady=10)
+
+        # Instructions section (taking full space now)
+        instructions_label = tk.Label(
+            left_panel,
+            text="Instructions",
+            font=('Segoe UI', 11, 'bold'),
+            bg='white',
+            fg='#333'
+        )
+        instructions_label.pack(pady=(5, 8))
+
+        instructions_frame = tk.Frame(left_panel, bg='#f5f5f5', relief=tk.SUNKEN, borderwidth=2)
+        instructions_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+
+        self.capture_instructions_text = tk.Text(
+            instructions_frame,
+            font=('Segoe UI', 8),
+            wrap=tk.WORD,
+            bg='#f5f5f5',
+            fg='#333',
+            relief=tk.FLAT,
+            padx=10,
+            pady=10
+        )
+        self.capture_instructions_text.pack(fill=tk.BOTH, expand=True)
+        self.capture_instructions_text.tag_configure("model_name", foreground='#00BCD4', font=('Segoe UI', 10, 'bold'))
+
+        # Initialize instructions
+        self.update_capture_instructions()
+
+        # MIDDLE PANEL - Camera Display (EXPANDS)
+        middle_panel = tk.Frame(content, bg='white', relief=tk.RAISED, borderwidth=1)
+        middle_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
+
+        # Camera display header
+        display_header = tk.Frame(middle_panel, bg='white')
+        display_header.pack(pady=10)
+
+        display_label = tk.Label(
+            display_header,
+            text="Camera View",
+            font=('Segoe UI', 16, 'bold'),
+            bg='white',
+            fg='#333'
+        )
+        display_label.pack()
+
+        self.capture_info_label = tk.Label(
+            display_header,
+            text="Camera inactive - Click 'Start Camera' to begin",
+            font=('Segoe UI', 9),
+            bg='white',
+            fg='#666'
+        )
+        self.capture_info_label.pack(pady=(5, 0))
+
+        # Camera container - FIXED BORDER ON ALL SIDES
+        camera_container = tk.Frame(middle_panel, bg='#e0e0e0', relief=tk.SUNKEN, borderwidth=2)
+        camera_container.pack(padx=15, pady=(8, 15), fill=tk.BOTH, expand=True)
+
+        self.capture_display = tk.Label(
+            camera_container,
+            text="Camera Inactive\n\nClick 'START CAMERA' to begin",
+            font=('Segoe UI', 12),
+            bg='#1a1a1a',
+            fg='white'
+        )
+        self.capture_display.pack(padx=2, pady=2, fill=tk.BOTH, expand=True)
+
+        # RIGHT PANEL - Classification Results (FIXED WIDTH - 320px)
+        right_panel = tk.Frame(content, bg='white', width=320, relief=tk.RAISED, borderwidth=1)
+        right_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(5, 0))
+        right_panel.pack_propagate(False)
+
+        results_label = tk.Label(
+            right_panel,
+            text="Classification Result",
+            font=('Segoe UI', 11, 'bold'),
+            bg='white',
+            fg='#333'
+        )
+        results_label.pack(pady=10)
+
+        results_info = tk.Label(
+            right_panel,
+            text="Results will appear here after capture",
+            font=('Segoe UI', 8),
+            bg='white',
+            fg='#999',
+            wraplength=280
+        )
+        results_info.pack(pady=(0, 5))
+
+        # Result display frame with Text widget for color formatting
+        result_frame = tk.Frame(right_panel, bg='#f5f5f5', relief=tk.SUNKEN, borderwidth=2)
+        result_frame.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
+
+        self.capture_result_text = tk.Text(
+            result_frame,
+            font=('Segoe UI', 9),
+            wrap=tk.WORD,
+            bg='#f5f5f5',
+            fg='#333',
+            relief=tk.FLAT,
+            padx=10,
+            pady=10
+        )
+        self.capture_result_text.pack(fill=tk.BOTH, expand=True)
+
+        # Configure tags for colored text
+        self.capture_result_text.tag_configure("prediction", foreground='#1976D2', font=('Segoe UI', 10, 'bold'))
+        self.capture_result_text.tag_configure("confidence", foreground='#2E7D32', font=('Segoe UI', 9, 'bold'))
+        self.capture_result_text.tag_configure("level", foreground='#F57C00', font=('Segoe UI', 9, 'bold'))
+        self.capture_result_text.tag_configure("model", foreground='#5E35B1', font=('Segoe UI', 9, 'bold'))
+        self.capture_result_text.tag_configure("label", foreground='#333', font=('Segoe UI', 9, 'bold'))
+
+        # Initial text
+        initial_text = "No capture yet\n\n"
+        initial_text += "Waiting for image capture...\n\n"
+        initial_text += "Start the camera and click\n"
+        initial_text += "the capture button to begin."
+        self.capture_result_text.insert('1.0', initial_text)
+        self.capture_result_text.config(state=tk.DISABLED)
+
+        # Additional info section at bottom
+        separator2 = tk.Frame(right_panel, bg='#ddd', height=1)
+        separator2.pack(fill=tk.X, padx=15, pady=8)
+
+        info_bottom_label = tk.Label(
+            right_panel,
+            text="Auto-Save Location",
+            font=('Segoe UI', 9, 'bold'),
+            bg='white',
+            fg='#00BCD4'
+        )
+        info_bottom_label.pack(pady=(0, 5))
+
+        self.capture_save_location_label = tk.Label(
+            right_panel,
+            text=f"results/captured_images/\n{self.model_type.get()}/",
+            font=('Segoe UI', 8),
+            bg='white',
+            fg='#666',
+            wraplength=280
+        )
+        self.capture_save_location_label.pack(pady=(0, 10))
 
     def create_video_screen(self):
         """Redesigned video processing screen with preview capabilities - SCROLLABLE"""
@@ -892,41 +1206,93 @@ class OfficeItemsClassifierGUI:
         # Stop camera if it's running
         if self.camera_active:
             self.stop_camera()
+        # Stop capture camera if it's running
+        if self.capture_camera_active:
+            self.stop_capture_camera()
         self.hide_all_frames()
         self.home_frame.pack(fill=tk.BOTH, expand=True)
         self.current_mode = "home"
         self.update_status("[HOME] Select a mode")
 
     def switch_to_images(self):
-        # Stop camera if it's running
+        # Stop cameras if running
         if self.camera_active:
             self.stop_camera()
+        if self.capture_camera_active:
+            self.stop_capture_camera()
         self.hide_all_frames()
         self.images_frame.pack(fill=tk.BOTH, expand=True)
         self.current_mode = "images"
+        self.mode_subtitle_label.config(text="Image Classification Mode")
         self.update_status("[IMAGE CLASSIFICATION] Mode active")
 
     def switch_to_camera(self):
         self.hide_all_frames()
         self.camera_frame.pack(fill=tk.BOTH, expand=True)
-        self.current_mode = "camera"
+        self.mode_subtitle_label.config(text="Live Camera Mode")
         self.update_status("[LIVE CAMERA] Mode active")
 
-    def switch_to_video(self):
-        # Stop camera if it's running
+    def switch_to_capture(self):
+        # Stop live camera if it's running
         if self.camera_active:
             self.stop_camera()
+        # Stop capture camera if it's running
+        if self.capture_camera_active:
+            self.stop_capture_camera()
+        self.hide_all_frames()
+        self.capture_frame.pack(fill=tk.BOTH, expand=True)
+        self.mode_subtitle_label.config(text="Camera Capture Mode")
+        self.update_status("[CAMERA CAPTURE] Mode active")
+
+    def switch_to_video(self):
+        # Stop cameras if running
+        if self.camera_active:
+            self.stop_camera()
+        if self.capture_camera_active:
+            self.stop_capture_camera()
         self.hide_all_frames()
         self.video_frame.pack(fill=tk.BOTH, expand=True)
-        self.current_mode = "video"
+        self.mode_subtitle_label.config(text="Video Processing Mode")
         self.update_status("[VIDEO PROCESSING] Mode active")
 
     def hide_all_frames(self):
         """Hide all mode frames"""
-        for frame in [self.home_frame, self.images_frame, self.camera_frame, self.video_frame]:
+        for frame in [self.home_frame, self.images_frame, self.camera_frame, self.capture_frame, self.video_frame]:
             frame.pack_forget()
 
-    # Model loading
+    def update_capture_instructions(self):
+        """Update capture screen instructions with current model - COMPACT VERSION"""
+        if not hasattr(self, 'capture_instructions_text'):
+            return
+
+        self.capture_instructions_text.config(state=tk.NORMAL)
+        self.capture_instructions_text.delete('1.0', tk.END)
+
+        # Much more compact instructions
+        instructions_content = """MODEL: """
+        self.capture_instructions_text.insert('1.0', instructions_content)
+        self.capture_instructions_text.insert(tk.END, self.model_type.get().upper() + "\n\n", "model_name")
+
+        # Compact workflow
+        instructions_content2 = """How to use:
+    1. START CAMERA - Activate camera
+    3. CAPTURE - Click when ready (Place item close to camera)
+    4. WAIT - Model processes image
+    5. VIEW RESULT - See prediction popup
+    6. AUTO-SAVED - Organized by model
+
+    TIPS
+    - Good lighting improves accuracy
+    - Clear background works best
+    - Keep item centered
+    - Wait for camera focus
+
+    FILES SAVED TO
+    captured_images/[model]/[class]/
+    """
+        self.capture_instructions_text.insert(tk.END, instructions_content2)
+        self.capture_instructions_text.config(state=tk.DISABLED)
+
     def load_model(self):
         """Load the selected model"""
         model_name = self.model_type.get()
@@ -961,6 +1327,32 @@ class OfficeItemsClassifierGUI:
             )
             self.current_model_label.config(text=f"[LOADED] {model_name.upper()}")
             self.update_status(f"[READY] Model loaded: {model_name.upper()}")
+
+            # Update capture screen if it exists
+            self.update_capture_instructions()
+
+            # Update save location label in capture screen
+            if hasattr(self, 'capture_save_location_label'):
+                self.capture_save_location_label.config(
+                    text=f"results/captured_images/\n{self.model_type.get()}/"
+                )
+
+            # Update live camera info text if it exists
+            if hasattr(self, 'camera_info_text'):
+                self.camera_info_text.delete('1.0', tk.END)
+                self.camera_info_text.tag_configure("model_name", foreground='#4CAF50', font=('Consolas', 9, 'bold'))
+
+                initial_info = f"Current Model: "
+                self.camera_info_text.insert('1.0', initial_info)
+                self.camera_info_text.insert(tk.END, f"{self.model_type.get().upper()}\n\n", "model_name")
+
+                camera_tips = "Camera Tips:\n\n"
+                camera_tips += "- Start camera to begin\n"
+                camera_tips += "- Real-time predictions\n"
+                camera_tips += "- Record with predictions\n"
+                camera_tips += "- Stop when done"
+                self.camera_info_text.insert(tk.END, camera_tips)
+
         except FileNotFoundError as e:
             error_msg = f"Missing required files:\n\n{str(e)}\n\nMake sure you have:\n• Model weights file\n• config/config.yaml\n• models/class_names.json"
             messagebox.showerror("Missing Files", error_msg)
@@ -1022,16 +1414,6 @@ class OfficeItemsClassifierGUI:
         else:
             self.update_status(f"[LOADED] {count} images ready for batch classification")
 
-        # Clear previous results
-        self.images_results_text.delete('1.0', tk.END)
-        result_text = f"[SUCCESS] {count} image(s) loaded successfully\n\n"
-        result_text += "Instructions:\n"
-        result_text += f"- {count} image(s) ready\n"
-        result_text += "- Use < > to navigate\n" if count > 1 else ""
-        result_text += "- Click 'Classify Images' to start\n\n"
-        result_text += "Waiting for classification..."
-        self.images_results_text.insert('1.0', result_text)
-
         # Auto-select and display first image
         self.images_listbox.selection_set(0)
         self.display_current_image()
@@ -1081,9 +1463,13 @@ class OfficeItemsClassifierGUI:
             self.images_listbox.selection_set(self.current_image_index)
             self.images_listbox.see(self.current_image_index)
 
+            # Update the prediction info box
+            self.update_prediction_info_box(image_path)
+
         except Exception as e:
             self.images_display_label.config(text=f"Error loading image:\n{str(e)}")
             self.image_info_label.config(text="")
+            self.update_prediction_info_box(None)
 
     def prev_image(self):
         """Navigate to previous image"""
@@ -1120,18 +1506,8 @@ class OfficeItemsClassifierGUI:
         self.btn_classify_images.config(state=tk.DISABLED)
 
         def classify_thread():
-            results_text = []  # Store as list of (text, tag) tuples
-
-            # Header
-            results_text.append(("CLASSIFICATION RESULTS\n", "bold"))
-            results_text.append(("=" * 46 + "\n\n", None))
-            results_text.append((f"Model: {self.model_type.get().upper()}\n", None))
-            results_text.append((f"Images: {len(self.selected_image_paths)}\n\n", None))
-            results_text.append(("=" * 46 + "\n\n", None))
-
             for idx, image_path in enumerate(self.selected_image_paths, 1):
                 try:
-                    filename = Path(image_path).name
                     predicted_class, confidence, probs = self.predictor.predict_image(image_path)
 
                     self.image_predictions[image_path] = {
@@ -1140,57 +1516,14 @@ class OfficeItemsClassifierGUI:
                         'probs': probs
                     }
 
-                    results_text.append((f"Image {idx}: {filename}\n", None))
-                    results_text.append(("   Class: ", None))
-                    results_text.append((f"{predicted_class}\n", "class_name"))
-                    results_text.append(("   Confidence: ", None))
-                    results_text.append((f"{confidence*100:.2f}%\n", "confidence"))
-
-                    # Top 3 predictions
-                    top3_idx = np.argsort(probs)[-3:][::-1]
-                    results_text.append(("   Top 3:\n", "bold"))
-                    for i, top_idx in enumerate(top3_idx, 1):
-                        cls = self.predictor.class_names[top_idx]
-                        prob = probs[top_idx]
-                        results_text.append((f"      {i}. ", None))
-                        results_text.append((f"{cls}", "bold"))
-                        results_text.append((f": {prob*100:.2f}%\n", None))
-
-                    results_text.append(("\n", None))
-
                 except Exception as e:
-                    results_text.append((f"[ERROR] Image {idx}: {str(e)}\n\n", None))
-
-            # Summary statistics
-            if self.image_predictions:
-                results_text.append(("=" * 46 + "\n", None))
-                results_text.append(("SUMMARY\n", "bold"))
-                results_text.append(("=" * 46 + "\n\n", None))
-
-                all_classes = [pred['class'] for pred in self.image_predictions.values()]
-                class_counts = Counter(all_classes)
-
-                results_text.append(("Class Distribution:\n", "bold"))
-                for cls, count in class_counts.most_common():
-                    percentage = (count / len(all_classes)) * 100
-                    results_text.append((f"  - {cls}: ", None))
-                    results_text.append((f"{count}", "bold"))
-                    results_text.append((f" ({percentage:.1f}%)\n", None))
-
-                avg_confidence = np.mean([pred['confidence'] for pred in self.image_predictions.values()])
-                results_text.append(("\nAverage Confidence: ", None))
-                results_text.append((f"{avg_confidence*100:.2f}%\n", "confidence"))
-
-            # Clear and insert with formatting
-            self.images_results_text.delete('1.0', tk.END)
-            for text, tag in results_text:
-                if tag:
-                    self.images_results_text.insert(tk.END, text, tag)
-                else:
-                    self.images_results_text.insert(tk.END, text)
+                    print(f"[ERROR] Image {idx}: {str(e)}")
 
             self.btn_classify_images.config(state=tk.NORMAL)
             self.update_status(f"[COMPLETE] Classified {len(self.selected_image_paths)} image(s)")
+
+            # Refresh the current image display to show the prediction info
+            self.display_current_image()
 
         threading.Thread(target=classify_thread, daemon=True).start()
 
@@ -2115,17 +2448,6 @@ class OfficeItemsClassifierGUI:
 
         # Force update to show window immediately (same as camera)
         loading_window.update_idletasks()
-        status_label = tk.Label(
-            loading_frame,
-            text="Starting processing...",
-            font=('Segoe UI', 9),
-            bg='white',
-            fg='#999'
-        )
-        status_label.pack(pady=(10, 0))
-
-        # Force update to show window immediately
-        loading_window.update_idletasks()
 
         try:
             self.update_status("[PROCESSING] Processing video...")
@@ -2137,7 +2459,6 @@ class OfficeItemsClassifierGUI:
                     cap = cv2.VideoCapture(str(self.input_video_path))
 
                     if not cap.isOpened():
-                        raise Exception("Cannot open input video")
                         raise Exception("Cannot open input video")
 
                     # Get video properties
@@ -2403,6 +2724,678 @@ class OfficeItemsClassifierGUI:
             os.system(f'open "{folder}"')
         else:
             os.system(f'xdg-open "{folder}"')
+
+    # ========== CAMERA CAPTURE METHODS ==========
+
+    def toggle_capture_camera(self):
+        """Start or stop the capture camera"""
+        if not self.capture_camera_active:
+            self.start_capture_camera()
+        else:
+            self.stop_capture_camera()
+
+    def start_capture_camera(self):
+        """Start the capture camera (no predictions)"""
+        # Create loading window
+        loading_window = tk.Toplevel(self.root)
+        loading_window.title("Starting Camera")
+        loading_window.geometry("400x250")
+        loading_window.resizable(False, False)
+        loading_window.configure(bg='white')
+        loading_window.transient(self.root)
+        loading_window.grab_set()
+
+        # Center window
+        loading_window.update_idletasks()
+        x = (loading_window.winfo_screenwidth() // 2) - (400 // 2)
+        y = (loading_window.winfo_screenheight() // 2) - (250 // 2)
+        loading_window.geometry(f'400x250+{x}+{y}')
+
+        # Variable to track if user cancelled
+        user_cancelled = [False]
+
+        # Handle X button click - stop camera initialization
+        def on_closing():
+            user_cancelled[0] = True
+            if self.capture_cap:
+                self.capture_cap.release()
+                self.capture_cap = None
+            self.capture_camera_active = False
+            loading_window.destroy()
+            self.update_status("[CANCELLED] Camera start cancelled")
+            self.capture_status_label.config(text="Camera Ready", fg='#666')
+
+        loading_window.protocol("WM_DELETE_WINDOW", on_closing)
+
+        # Loading content
+        loading_frame = tk.Frame(loading_window, bg='white')
+        loading_frame.pack(expand=True, fill=tk.BOTH, padx=30, pady=30)
+
+        loading_label = tk.Label(
+            loading_frame,
+            text="Starting Camera",
+            font=('Segoe UI', 16, 'bold'),
+            bg='white',
+            fg='#00BCD4'
+        )
+        loading_label.pack(pady=(0, 15))
+
+        loading_msg = tk.Label(
+            loading_frame,
+            text="Please be patient...\nThis may take several seconds",
+            font=('Segoe UI', 11),
+            bg='white',
+            fg='#666',
+            justify=tk.CENTER
+        )
+        loading_msg.pack(pady=(0, 20))
+
+        # Progress bar with custom style for visibility
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure("CaptureLoading.Horizontal.TProgressbar",
+                       foreground='#00BCD4',
+                       background='#00BCD4',
+                       troughcolor='#e0e0e0',
+                       bordercolor='#ccc',
+                       lightcolor='#00BCD4',
+                       darkcolor='#00BCD4')
+
+        progress = ttk.Progressbar(
+            loading_frame,
+            style="CaptureLoading.Horizontal.TProgressbar",
+            mode='indeterminate',
+            length=320
+        )
+        progress.pack(pady=10)
+        progress.start(8)
+
+        # Status label
+        status_label = tk.Label(
+            loading_frame,
+            text="Initializing camera...",
+            font=('Segoe UI', 9),
+            bg='white',
+            fg='#999'
+        )
+        status_label.pack(pady=(10, 0))
+
+        # Force update to show window immediately
+        loading_window.update_idletasks()
+
+        def start_cam():
+            success = False
+            try:
+                # Check if user cancelled before starting
+                if user_cancelled[0]:
+                    return
+
+                status_label.config(text="Opening camera device...")
+                loading_window.update()
+
+                # Check again after update
+                if user_cancelled[0]:
+                    return
+
+                self.capture_cap = cv2.VideoCapture(0)
+
+                # Wait a moment for camera to initialize
+                import time
+                time.sleep(0.5)
+
+                # Check if user cancelled during initialization
+                if user_cancelled[0]:
+                    if self.capture_cap:
+                        self.capture_cap.release()
+                        self.capture_cap = None
+                    return
+
+                status_label.config(text="Checking camera connection...")
+                loading_window.update()
+
+                if not self.capture_cap.isOpened():
+                    if not user_cancelled[0]:
+                        loading_window.destroy()
+                        messagebox.showerror("Error", "Could not open camera")
+                    return
+
+                # Check again before proceeding
+                if user_cancelled[0]:
+                    if self.capture_cap:
+                        self.capture_cap.release()
+                        self.capture_cap = None
+                    return
+
+                # Try to read a test frame
+                status_label.config(text="Testing camera feed...")
+                loading_window.update()
+
+                ret, test_frame = self.capture_cap.read()
+                if not ret:
+                    if not user_cancelled[0]:
+                        loading_window.destroy()
+                        messagebox.showerror("Error", "Cannot read from camera")
+                    if self.capture_cap:
+                        self.capture_cap.release()
+                        self.capture_cap = None
+                    return
+
+                # Final check before activating
+                if user_cancelled[0]:
+                    if self.capture_cap:
+                        self.capture_cap.release()
+                        self.capture_cap = None
+                    return
+
+                status_label.config(text="Starting video stream...")
+                loading_window.update()
+
+                self.capture_camera_active = True
+                self.btn_start_capture_camera.config(text="STOP CAMERA", bg='#F44336')
+                self.btn_capture.config(state=tk.NORMAL)
+                self.capture_status_label.config(text="Camera Active", fg='#4CAF50')
+                self.update_status("[CAPTURE] Camera started")
+
+                success = True
+
+                # Small delay before closing to show completion
+                status_label.config(text="Camera ready!")
+                loading_window.update()
+                time.sleep(0.3)
+
+            except Exception as e:
+                if not user_cancelled[0]:
+                    loading_window.destroy()
+                    messagebox.showerror("Error", f"Failed to start camera:\n{str(e)}")
+                    self.update_status("[ERROR] Camera failed")
+                if self.capture_cap:
+                    self.capture_cap.release()
+                    self.capture_cap = None
+                self.capture_camera_active = False
+                return
+            finally:
+                # Close loading window if it still exists and user didn't cancel
+                if not user_cancelled[0] and loading_window.winfo_exists():
+                    loading_window.destroy()
+
+            # Start the camera feed AFTER loading window is closed
+            if success and not user_cancelled[0]:
+                self.update_capture_camera_feed()
+
+        # Start in thread
+        threading.Thread(target=start_cam, daemon=True).start()
+
+    def stop_capture_camera(self):
+        """Stop the capture camera"""
+        self.capture_camera_active = False
+
+        if self.capture_cap:
+            self.capture_cap.release()
+            self.capture_cap = None
+
+        self.btn_start_capture_camera.config(text="START CAMERA", bg='#4CAF50')
+        self.btn_capture.config(state=tk.DISABLED)
+        self.capture_status_label.config(text="Camera Stopped", fg='#666')
+
+        # Reset display
+        self.capture_display.config(
+            image='',
+            text="Camera Inactive\n\nClick 'START CAMERA' to begin"
+        )
+
+        # Clear image reference
+        if hasattr(self.capture_display, 'image'):
+            delattr(self.capture_display, 'image')
+
+        self.update_status("[READY] Camera stopped")
+
+    def update_capture_camera_feed(self):
+        """Update camera feed without predictions"""
+        if not self.capture_camera_active or not self.capture_cap:
+            return
+
+        ret, frame = self.capture_cap.read()
+
+        if ret:
+            # Store the current frame for capture
+            self.captured_frame = frame.copy()
+
+            # Convert and display
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(frame_rgb)
+
+            # Resize to fit display while maintaining aspect ratio
+            display_width = self.capture_display.winfo_width()
+            display_height = self.capture_display.winfo_height()
+
+            if display_width > 1 and display_height > 1:
+                img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
+
+            imgtk = ImageTk.PhotoImage(image=img)
+            self.capture_display.imgtk = imgtk
+            self.capture_display.config(image=imgtk, text='')
+
+        # Schedule next update
+        if self.capture_camera_active:
+            self.root.after(30, self.update_capture_camera_feed)
+
+    def capture_image(self):
+        """Capture current frame and process it"""
+        if not self.capture_camera_active or self.captured_frame is None:
+            messagebox.showwarning("Warning", "Camera is not active!")
+            return
+
+        # Freeze the current frame
+        frozen_frame = self.captured_frame.copy()
+
+        # Display frozen frame
+        frame_rgb = cv2.cvtColor(frozen_frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame_rgb)
+
+        display_width = self.capture_display.winfo_width()
+        display_height = self.capture_display.winfo_height()
+
+        if display_width > 1 and display_height > 1:
+            img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
+
+        imgtk = ImageTk.PhotoImage(image=img)
+        self.capture_display.imgtk = imgtk
+        self.capture_display.config(image=imgtk, text='')
+
+        # Update status - Captured
+        self.capture_status_label.config(text="Captured!", fg='#00BCD4')
+        self.btn_capture.config(state=tk.DISABLED)
+        self.update_status("[CAPTURED] Image captured, processing...")
+
+        # Brief delay to show "Captured!" status
+        self.root.after(800, lambda: self._continue_processing(frozen_frame))
+
+    def _continue_processing(self, frozen_frame):
+        """Continue with processing after showing captured status"""
+        # Update status - Processing
+        self.capture_status_label.config(text="Processing...", fg='#FF9800')
+        self.update_status("[PROCESSING] Classifying image...")
+
+        # Create loading window
+        loading_window = tk.Toplevel(self.root)
+        loading_window.title("Processing")
+        loading_window.geometry("400x250")
+        loading_window.resizable(False, False)
+        loading_window.configure(bg='white')
+        loading_window.transient(self.root)
+        loading_window.grab_set()
+
+        # Center window
+        loading_window.update_idletasks()
+        x = (loading_window.winfo_screenwidth() // 2) - (400 // 2)
+        y = (loading_window.winfo_screenheight() // 2) - (250 // 2)
+        loading_window.geometry(f'400x250+{x}+{y}')
+
+        # Loading content
+        loading_frame = tk.Frame(loading_window, bg='white')
+        loading_frame.pack(expand=True, fill=tk.BOTH, padx=30, pady=30)
+
+        loading_label = tk.Label(
+            loading_frame,
+            text="Processing Image",
+            font=('Segoe UI', 16, 'bold'),
+            bg='white',
+            fg='#00BCD4'
+        )
+        loading_label.pack(pady=(0, 15))
+
+        loading_msg = tk.Label(
+            loading_frame,
+            text="Classifying image...\nPlease wait...",
+            font=('Segoe UI', 11),
+            bg='white',
+            fg='#666',
+            justify=tk.CENTER
+        )
+        loading_msg.pack(pady=(0, 20))
+
+        # Progress bar with custom style
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure("ProcessingCapture.Horizontal.TProgressbar",
+                       foreground='#00BCD4',
+                       background='#00BCD4',
+                       troughcolor='#e0e0e0',
+                       bordercolor='#ccc',
+                       lightcolor='#00BCD4',
+                       darkcolor='#00BCD4')
+
+        progress = ttk.Progressbar(
+            loading_frame,
+            style="ProcessingCapture.Horizontal.TProgressbar",
+            mode='indeterminate',
+            length=320
+        )
+        progress.pack(pady=10)
+        progress.start(8)
+
+        # Status label
+        status_label = tk.Label(
+            loading_frame,
+            text="Running AI model...",
+            font=('Segoe UI', 9),
+            bg='white',
+            fg='#999'
+        )
+        status_label.pack(pady=(10, 0))
+
+        # Force update to show window immediately
+        loading_window.update_idletasks()
+
+        # Process in thread
+        def process_capture():
+            try:
+                # Save frame temporarily
+                temp_path = Path("temp_capture.jpg")
+                cv2.imwrite(str(temp_path), frozen_frame)
+
+                # Predict
+                predicted_class, confidence, probs = self.predictor.predict_image(temp_path)
+
+                # Create filename with timestamp
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                model_folder = self.captures_folder / self.model_type.get()
+                model_folder.mkdir(parents=True, exist_ok=True)
+
+                save_path = model_folder / f"{predicted_class}_{timestamp}.jpg"
+
+                # Add prediction overlay to frame (same as live camera)
+                processed_frame = self.add_prediction_overlay(frozen_frame.copy(), predicted_class, confidence, probs)
+
+                # Save the captured image with overlay
+                cv2.imwrite(str(save_path), processed_frame)
+
+                # Clean up temp file
+                if temp_path.exists():
+                    temp_path.unlink()
+
+                # Close loading window
+                if loading_window.winfo_exists():
+                    loading_window.destroy()
+
+                # Update UI in main thread with processed frame
+                self.root.after(0, lambda: self.display_capture_result(
+                    processed_frame, predicted_class, confidence, probs, save_path
+                ))
+
+            except Exception as e:
+                # Close loading window on error
+                if loading_window.winfo_exists():
+                    loading_window.destroy()
+                self.root.after(0, lambda: self.handle_capture_error(str(e)))
+
+        threading.Thread(target=process_capture, daemon=True).start()
+
+    def add_prediction_overlay(self, frame, predicted_class, confidence, probs):
+        """Add prediction overlay to frame (same style as live camera)"""
+        height, width = frame.shape[:2]
+
+        # Calculate responsive scaling factors
+        scale_x = width / 640.0
+        scale_y = height / 480.0
+        scale = min(scale_x, scale_y)
+
+        # Responsive dimensions
+        overlay_height = int(205 * scale_y)
+        overlay_width = int(295 * scale_x)
+        margin_x = int(20 * scale_x)
+        margin_y = int(35 * scale_y)
+
+        # Font scales
+        title_scale = 1.0 * scale
+        text_scale = 0.55 * scale
+
+        # Thickness scales
+        title_thickness = max(2, int(2 * scale))
+        text_thickness = max(1, int(1 * scale))
+
+        # Add semi-transparent overlay at top-left
+        overlay = frame.copy()
+        cv2.rectangle(overlay, (0, 0), (overlay_width, overlay_height), (0, 0, 0), -1)
+        frame = cv2.addWeighted(overlay, 0.6, frame, 0.4, 0)
+
+        # Color based on confidence
+        if confidence > 0.8:
+            color = (0, 255, 0)
+            conf_text = "HIGH"
+        elif confidence > 0.6:
+            color = (0, 200, 255)
+            conf_text = "MEDIUM"
+        else:
+            color = (0, 0, 255)
+            conf_text = "LOW"
+
+        # Draw predictions with responsive positioning
+        y_pos = margin_y
+        cv2.putText(frame, predicted_class.upper(), (margin_x, y_pos),
+                   cv2.FONT_HERSHEY_TRIPLEX, title_scale, color, title_thickness, cv2.LINE_AA)
+
+        y_pos += int(28 * scale_y)
+        conf_display = f"Confidence: {confidence:.1%} ({conf_text})"
+        cv2.putText(frame, conf_display, (margin_x, y_pos),
+                   cv2.FONT_HERSHEY_TRIPLEX, text_scale, color, text_thickness, cv2.LINE_AA)
+
+        y_pos += int(25 * scale_y)
+        model_display = f"Model: {self.model_type.get().upper()}"
+        cv2.putText(frame, model_display, (margin_x, y_pos),
+                   cv2.FONT_HERSHEY_TRIPLEX, text_scale, (0, 255, 255), text_thickness, cv2.LINE_AA)
+
+        y_pos += int(28 * scale_y)
+        cv2.putText(frame, "Top 3 Predictions:", (margin_x, y_pos),
+                   cv2.FONT_HERSHEY_TRIPLEX, text_scale, (255, 255, 255), text_thickness, cv2.LINE_AA)
+
+        top3_idx = np.argsort(probs)[-3:][::-1]
+        y_pos += int(25 * scale_y)
+        for i, idx in enumerate(top3_idx):
+            cls = self.predictor.class_names[idx]
+            prob = probs[idx]
+            text_color = (0, 255, 0) if i == 0 else (255, 255, 255)
+            text = f"{i+1}. {cls}: {prob:.1%}"
+            cv2.putText(frame, text, (margin_x, y_pos),
+                       cv2.FONT_HERSHEY_TRIPLEX, text_scale, text_color, text_thickness, cv2.LINE_AA)
+            y_pos += int(25 * scale_y)
+
+        return frame
+
+    def display_capture_result(self, processed_frame, predicted_class, confidence, probs, save_path):
+        """Display the capture result with overlay in a new window"""
+        try:
+            # Update status
+            self.capture_status_label.config(text="Processed!", fg='#4CAF50')
+
+            # Confidence level
+            if confidence > 0.8:
+                conf_level = "HIGH"
+                level_color = "confidence"
+            elif confidence > 0.6:
+                conf_level = "MEDIUM"
+                level_color = "level"
+            else:
+                conf_level = "LOW"
+                level_color = "label"
+
+            # Update result text with colors
+            self.capture_result_text.config(state=tk.NORMAL)
+            self.capture_result_text.delete('1.0', tk.END)
+
+            self.capture_result_text.insert(tk.END, "Prediction:\n", "label")
+            self.capture_result_text.insert(tk.END, f"{predicted_class.upper()}\n\n", "prediction")
+
+            self.capture_result_text.insert(tk.END, "Confidence: ", "label")
+            self.capture_result_text.insert(tk.END, f"{confidence:.1%}\n", "confidence")
+
+            self.capture_result_text.insert(tk.END, "Level: ", "label")
+            self.capture_result_text.insert(tk.END, f"{conf_level}\n\n", level_color)
+
+            self.capture_result_text.insert(tk.END, "Top 3:\n", "label")
+
+            # Get top 3 predictions
+            top3_idx = np.argsort(probs)[-3:][::-1]
+            for i, idx in enumerate(top3_idx):
+                cls = self.predictor.class_names[idx]
+                prob = probs[idx]
+                self.capture_result_text.insert(tk.END, f"{i + 1}. {cls}: {prob:.1%}\n")
+
+            self.capture_result_text.insert(tk.END, f"\nModel: ", "label")
+            self.capture_result_text.insert(tk.END, f"{self.model_type.get().upper()}\n\n", "model")
+
+            self.capture_result_text.insert(tk.END, f"Saved: {save_path.name}")
+
+            self.capture_result_text.config(state=tk.DISABLED)
+
+            self.update_status(f"[SUCCESS] Image captured and saved: {predicted_class}")
+
+            # Create result window to show the processed image
+            result_window = tk.Toplevel(self.root)
+            result_window.title("Capture Result")
+            result_window.configure(bg='white')
+            result_window.transient(self.root)
+            result_window.grab_set()
+
+            # Create frame for content
+            content_frame = tk.Frame(result_window, bg='white')
+            content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+            # Title
+            title_label = tk.Label(
+                content_frame,
+                text="Capture Processed Successfully!",
+                font=('Segoe UI', 14, 'bold'),
+                bg='white',
+                fg='#4CAF50'
+            )
+            title_label.pack(pady=(0, 15))
+
+            # Convert processed frame to display
+            frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(frame_rgb)
+
+            # Resize image to fit nicely in window (max 800x600)
+            max_width = 800
+            max_height = 600
+            img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+
+            imgtk = ImageTk.PhotoImage(image=img)
+
+            # Display image
+            img_label = tk.Label(content_frame, image=imgtk, bg='white')
+            img_label.image = imgtk  # Keep reference
+            img_label.pack(pady=(0, 15))
+
+            # Info text
+            info_text = f"Class: {predicted_class.upper()} | Confidence: {confidence:.1%} ({conf_level})\n"
+            info_text += f"Saved to: {save_path.name}"
+
+            info_label = tk.Label(
+                content_frame,
+                text=info_text,
+                font=('Segoe UI', 10),
+                bg='white',
+                fg='#666',
+                justify=tk.CENTER
+            )
+            info_label.pack(pady=(0, 15))
+
+            # Buttons frame
+            buttons_frame = tk.Frame(content_frame, bg='white')
+            buttons_frame.pack(pady=(0, 0))
+
+            # Function to open file location
+            def open_file_location():
+                import os
+                import platform
+
+                # Get the folder containing the saved file
+                folder = save_path.parent
+
+                # Open folder in file explorer
+                if platform.system() == 'Windows':
+                    # Open folder and select the file
+                    os.system(f'explorer /select,"{save_path}"')
+                elif platform.system() == 'Darwin':  # macOS
+                    # Open folder and select the file
+                    os.system(f'open -R "{save_path}"')
+                else:  # Linux
+                    # Just open the folder (selecting specific file is harder on Linux)
+                    os.system(f'xdg-open "{folder}"')
+
+                self.update_status(f"[INFO] Opened file location: {folder.name}")
+
+            # OK button
+            def on_ok():
+                result_window.destroy()
+                # Re-enable capture button
+                self.btn_capture.config(state=tk.NORMAL)
+                self.capture_status_label.config(text="Camera Active", fg='#4CAF50')
+
+            # Open Folder button
+            open_folder_button = ModernButton(
+                buttons_frame,
+                text="OPEN FOLDER",
+                command=open_file_location,
+                bg='#FF9800'
+            )
+            open_folder_button.pack(side=tk.LEFT, padx=5, ipadx=20)
+
+            # OK button
+            ok_button = ModernButton(
+                buttons_frame,
+                text="OK",
+                command=on_ok,
+                bg='#4CAF50'
+            )
+            ok_button.pack(side=tk.LEFT, padx=5, ipadx=40)
+
+            # Bind Enter key to OK
+            result_window.bind('<Return>', lambda e: on_ok())
+
+            # Set window size based on image
+            result_window.update_idletasks()
+            window_width = img.width + 40
+            window_height = img.height + 180  # Extra space for title, info, button
+
+            # Center window
+            x = (result_window.winfo_screenwidth() // 2) - (window_width // 2)
+            y = (result_window.winfo_screenheight() // 2) - (window_height // 2)
+            result_window.geometry(f'{window_width}x{window_height}+{x}+{y}')
+
+        except Exception as e:
+            self.handle_capture_error(str(e))
+
+    def handle_capture_error(self, error_msg):
+        """Handle errors during capture"""
+        self.capture_status_label.config(text="Error", fg='#F44336')
+        self.btn_capture.config(state=tk.NORMAL)
+
+        self.capture_result_text.config(state=tk.NORMAL)
+        self.capture_result_text.delete('1.0', tk.END)
+        self.capture_result_text.insert('1.0', f"Error during capture:\n{error_msg}")
+        self.capture_result_text.config(state=tk.DISABLED)
+
+        self.update_status("[ERROR] Capture failed")
+        messagebox.showerror("Error", f"Failed to process capture:\n{error_msg}")
+
+    def open_captures_folder(self):
+        """Open the captures folder"""
+        import os
+        import platform
+
+        folder = self.captures_folder / self.model_type.get()
+        folder.mkdir(parents=True, exist_ok=True)
+
+        if platform.system() == 'Windows':
+            os.startfile(folder)
+        elif platform.system() == 'Darwin':
+            os.system(f'open "{folder}"')
+        else:
+            os.system(f'xdg-open "{folder}"')
+
+        self.update_status(f"[INFO] Opened folder: {folder}")
 
     def update_status(self, text):
         """Update status bar"""
