@@ -140,6 +140,7 @@ The easiest way to use the system is through the graphical interface:
 ```bash
 python scripts/run_gui.py
 ```
+**⚠️Important: Running the GUI using PyCharm’s “Run” button will not work. You must execute the command above in the terminal in the ai-robotics-coursework-1 directory for the GUI to launch properly.**
 
 **Note:** The application may take several seconds to load before the window appears. Please be patient and avoid closing the terminal during startup.
 
@@ -182,12 +183,33 @@ Top 3 Predictions:
 3. Stapler: 0%
 ```
 
-### Input Method 2: Live Camera Feed
+## Input Method 2: Camera Capture
+
+**From GUI:**
+
+1. **Launch GUI:** `python scripts/run_gui.py`
+2. **Select model** from dropdown (e.g., YOLO12m)
+3. Click **"Camera Capture"** button
+4. **Live preview** will appear from your webcam
+5. Position the object in front of the camera
+6. Click **"Capture"** button to take a snapshot
+7. **Instant classification** appears with:
+   - Predicted class
+   - Confidence score
+   - Color-coded confidence level
+   - Top-3 predictions
+8. Image is **automatically saved** to `results/captured_images/`
+9. Click **"Capture"** again for more snapshots, or click **"Home"** to return
+
+![Camera Capture Mode](docs/readme-images/gui-camera-capture.png)
+
+*Figure 3: Camera Capture showing prediction results with confidence scores and top-3 predictions*
+
+
+### Input Method 3: Live Camera Feed
 
 **From GUI:**
 1. Launch GUI: `python scripts/run_gui.py`
-
-**⚠️Important: Running the GUI using PyCharm’s “Run” button will not work. You must execute the command above in the terminal for the GUI to launch properly.**
 2. Select model from dropdown
 3. Click "Camera" button
 4. Click "Start Camera" to begin live feed (This will take a moment. Please be patient.)
@@ -197,7 +219,7 @@ Top 3 Predictions:
 
 ![Camera Mode](docs/readme-images/gui-camera-mode.png)
 
-*Figure 2: Live camera mode with real-time predictions and confidence scores overlaid on video feed*
+*Figure 4: Live camera mode with real-time predictions and confidence scores overlaid on video feed*
 
 
 **Features:**
@@ -1117,13 +1139,13 @@ Users can switch between models at any time:
 ### GUI Screenshots Gallery
 
 **Home Screen:**
-![Home Screen](docs/readme-images/gui-home-screen.png)
+![Home Screen](docs/readme-images/1)
 
 **Single Image Mode:**
-![Single Image](docs/readme-images/gui-single-image.png)
+![Single Image](docs/readme-images/5.png)
 
 **Camera Mode:**
-![Camera Mode](docs/readme-images/gui-camera-mode.png)
+![Camera Mode](docs/readme-images/1.png)
 
 ---
 ## Code Structure
