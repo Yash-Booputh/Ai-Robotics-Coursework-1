@@ -239,7 +239,7 @@ class OfficeItemsClassifierGUI:
 
         welcome_title = tk.Label(
             welcome_frame,
-            text="Welcome to IRIS Office Items Classification System ",
+            text="Welcome to IRIS Office Items Classifier ",
             font=('Segoe UI', 22, 'bold'),
             bg='white',
             fg='#1976D2'
