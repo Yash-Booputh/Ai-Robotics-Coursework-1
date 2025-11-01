@@ -432,7 +432,7 @@ data/
 
 ### Dataset Access
 
-**Download Link:** [Office Items Dataset on Google Drive](https://drive.google.com/file/d/1evj6sFyRsFub2O8DH47edIKSSxY7tQy8/view?usp=sharing)
+**Download Link:** [Office Items Dataset on Google Drive](https://drive.google.com/file/d/1Lq7Ot6rK3nmuWVQkBN_oF6hek6ClstvS/view?usp=sharing)
 
 **Size:** Approximately 1.08 GB (compressed)
 
