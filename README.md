@@ -183,7 +183,7 @@ Top 3 Predictions:
 3. Stapler: 0%
 ```
 
-## Input Method 2: Camera Capture
+### Input Method 2: Camera Capture
 
 **From GUI:**
 
@@ -247,7 +247,7 @@ Top 3 Predictions:
 **Supported Formats:** MP4
 
 ![video File Processing](docs/readme-images/gui-video-processing-mode.png)
-*Figure 3: Video File Processing mode with predictions and confidence scores overlaid on video*
+*Figure 5: Video File Processing mode with predictions and confidence scores overlaid on video*
 
 
 **Expected Output:**
