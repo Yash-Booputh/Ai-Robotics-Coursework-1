@@ -110,7 +110,7 @@ class ScrollableFrame(tk.Frame):
 class OfficeItemsClassifierGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("IRIS Item Classifier")
+        self.root.title("IRIS Office Items Classifier")
 
         # Set minimum window size
         self.root.minsize(1000, 700)
