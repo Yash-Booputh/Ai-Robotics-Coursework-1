@@ -6,7 +6,7 @@
 **Institution:** Middlesex University Mauritius  
 **Module:** PDE3802 Artificial Intelligence (AI) in Robotics  
 **Academic Year:** 2025-26  
-**Submission Date:** Friday 31th October 2025
+**Submission Date:** Sunday 2nd November 2025
 
 ---
 
