@@ -65,12 +65,6 @@ class YOLOClassifier:
 
 
 def create_yolo_model(model_name: str = 'yolo11m-cls') -> YOLOClassifier:
-    """
-    Create YOLO classifier with correct pretrained model names
-
-    YOLO11m uses: yolo11m-cls.pt (no 'v')
-    YOLO12m uses: yolov12m-cls.pt (with 'v')
-    """
     model_mapping = {
         'yolo11m-cls': 'yolo11m-cls.pt',  # No 'v' prefix
         'yolo12m-cls': 'yolov12m-cls.pt'  # With 'v' prefix

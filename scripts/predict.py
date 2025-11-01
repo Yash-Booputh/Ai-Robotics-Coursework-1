@@ -1,15 +1,6 @@
 """
 Run inference on images, camera, or video.
 
-Usage:
-    # Single image
-    python scripts/predict.py --model resnet34 --source path/to/image.jpg
-
-    # Camera (0 = default camera)
-    python scripts/predict.py --model yolo11m --source 0
-
-    # Video file
-    python scripts/predict.py --model resnet50 --source video.mp4 --output output.mp4
 """
 
 import sys

@@ -1,12 +1,6 @@
 """
-Professional GUI Application for Office Items Classification
+GUI Application for Office Items Classification
 
-Fully Responsive Features:
-- Dynamic layouts that adapt to window size
-- Scrollable content areas
-- Flexible grids and frames
-- No hidden content on resize
-- Minimum window size constraints
 """
 
 import tkinter as tk

@@ -1,11 +1,6 @@
 """
 Inference Module for Office Items Classification
 
-Supports prediction from:
-- Single image file
-- Multiple image files
-- Webcam/camera feed
-- Video file
 """
 
 import torch

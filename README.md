@@ -186,6 +186,8 @@ Top 3 Predictions:
 
 **From GUI:**
 1. Launch GUI: `python scripts/run_gui.py`
+
+**⚠️Important: Running the GUI using PyCharm’s “Run” button will not work. You must execute the command above in the terminal for the GUI to launch properly.**
 2. Select model from dropdown
 3. Click "Camera" button
 4. Click "Start Camera" to begin live feed (This will take a moment. Please be patient.)
@@ -1228,41 +1230,9 @@ Ai-Robotics-Coursework-1/
 
 ## Video Demonstration
 
-### Code Walkthrough Video
+**Duration:** 5:08 minutes
 
-**Duration:** 5 minutes
-
-**Link:** [Insert Video Link Here]
-
-**Content:**
-1. **Introduction (15 seconds)**
-   - Project overview
-   - System capabilities
-
-2. **Installation Demo (20 seconds)**
-   - Quick installation walkthrough
-   - Dependency verification
-
-3. **Running the Code (45 seconds)**
-   - Launching GUI application
-   - Single image classification demo
-   - Live camera prediction demo
-   - Model switching demonstration
-
-4. **Results Overview (30 seconds)**
-   - Evaluation metrics display
-   - Confusion matrix explanation
-   - Model comparison visualization
-
-5. **Code Structure (10 seconds)**
-   - Brief overview of project organization
-   - Key modules explanation
-
-**Recording Details:**
-- Screen recording with narration
-- Clear demonstration of all features
-- Shows code running smoothly
-- Displays results and metrics
+**Link:** https://youtu.be/avpaK8TuQJs?si=6tn0AEnrrJLozMft
 
 ---
 
